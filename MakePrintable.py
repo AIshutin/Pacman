@@ -1,3 +1,4 @@
+from copy import*
 from tkinter import filedialog
 from tkinter import *
 from win32api import GetSystemMetrics
@@ -11,48 +12,71 @@ class prec:
         self.version = version
         self.source = source
 
-def _square(self, x, y, d):
-    width = 2
-    self.create_line(x, y, x + d, y, width = width)
-    self.create_line(x, y, x, y + d, width = width)    
-    self.create_line(x + d, y, x + d, y + d, width = width)
-    self.create_line(x, y + d, x + d, y + d, width= width)
+def _square(self, x, y, d, tag):
+    width = 5
+    self.create_polygon(x, y, x + d, y, x + d, y + d, x, y + d, tag = tag, fill = "white")
+    self.create_line(x, y, x + d, y, width = width, tag = tag)
+    self.create_line(x, y, x, y + d, width = width, tag = tag)    
+    self.create_line(x + d, y, x + d, y + d, width = width, tag = tag)
+    self.create_line(x, y + d, x + d, y + d, width= width, tag = tag)
 Canvas.square = _square    
 
-def _wall(self, x, y, d):
+def _wall(self, x, y, d, tag):
     width = 2
-    self.square(x, y, d)
-    self.create_line(x, y, x + d, y + d, width = width)
-    self.create_line(x + d, y, x, y + d, width = width)
-    self.create_line(x + d // 2, y, x + d / 2, y + d, width = width)
-    self.create_line(x, y + d // 2, x + d, y + d // 2, width = width)
+    self.square(x, y, d, tag)
+    self.create_line(x, y, x + d, y + d, width = width, tag = tag)
+    self.create_line(x + d, y, x, y + d, width = width, tag = tag)
+    self.create_line(x + d // 2, y, x + d / 2, y + d, width = width, tag = tag)
+    self.create_line(x, y + d // 2, x + d, y + d // 2, width = width, tag = tag)
+    print(self.find_withtag(tag))
 Canvas.wall = _wall
 
 def _create_circle(self, x, y, r, **kwargs):
     return self.create_oval(x - r, y - r, x + r, y + r, **kwargs)
 Canvas.create_circle = _create_circle
 
-def _food(self, x, y, d):
-    #global c
-    self.square(x, y, d)
-    self.create_circle(x + d // 2, y + d // 2, d // 4, width = 2)
+def _food(self, x, y, d, tag):
+    self.square(x, y, d, tag)
+    self.create_circle(x + d // 2, y + d // 2, d // 4, width = 2, tag = tag)
+    print(self.find_withtag(tag))
 Canvas.food = _food
 
-def _stuf(self, x, y, d, gif1):
-    #global c
-    #gif1 = PhotoImage(file='pacman.gif')
-    self.square(x, y, d)
-    self.create_image(x, y, image=gif1, anchor=NW)  
-Canvas.stuf =_stuf
+def _stuf(self, x, y, d, gif1, tag):
+    self.square(x, y, d, tag)
+    self.create_image(x, y, image = gif1, anchor = NW, tag= tag)
+    print(self.find_withtag(tag))
+Canvas.stuf = _stuf
+
+def replace(event):
+    c = app.canv
+    x, y = map(int, str(event)[26:].replace("=", "").replace("y", "")[:-1].split())
+    #print(x, y)
+    d = app.d
+    i = (x - 1) // d
+    j = (y - 1) // d
+    c.delete(str(j) + "x" + str(i))
+    #print(x, y, d, i, j)
+    app.field[i] = app.field[i][:j] + app.brash + app.field[i][j + 1:]
+    if app.brash == "0":
+        c.wall(i * d, j * d, d, str(i) + "x" + str("j"))
+    elif app.brash == "a":
+        c.stuf(i * d, j * d, d, ap, str(i) + "x" + str("j"))
+    elif app.brash == "c":
+        c.stuf(i * d, j * d, d, ch, str(i) + "x" + str("j"))
+    elif app.brash == ".":
+        c.food(i * d, j * d, d, str(i) + "x" + str("j"))
+    else:
+        c.stuf(i * d, j * d, d, pc ,str(i) + "x" + str("j"))
 
 def _draw_gamefield(self, curr):   
     h = len(curr)
     w = len(curr[0])
-    w_r = (settings.width - 100) / w
-    h_r = (settings.height - 100)/ h
+    w_r = (settings.width - 100) // w
+    h_r = (settings.height - 100)// h
     d = min(w_r, h_r)
     w_r = d
     h_r = d
+    app.d = d
     for i in range(h):
         for j in range(w):
             x = j * w_r
@@ -60,15 +84,16 @@ def _draw_gamefield(self, curr):
             if (h > w):
                 x, y = y, x
             if curr[i][j] == "0":
-                self.wall(x, y, d)
+                print("!", str(i) + "x" + str(j), self.wall(x, y, d, str(i) + "x" + str(j)))
             if curr[i][j] == ".":
-                self.food(x, y, d)
+                print("!", str(i) + "x" + str(j), self.food(x, y, d, str(i) + "x" + str(j)))
             if curr[i][j] == "<":
-                self.stuf(x, y, d, pc)
+                print("!", str(i) + "x" + str(j), self.stuf(x, y, d, pc, str(i) + "x" + str(j)))
             if curr[i][j] == "a":
-                self.stuf(x, y, d, ap)
+                print("!", str(i) + "x" + str(j), self.stuf(x, y, d, ap, str(i) + "x" + str(j)))
             if curr[i][j] == "c":
-                self.stuf(x, y, d, ch)
+                print("!", str(i) + "x" + str(j), self.stuf(x, y, d, ch, str(i) + "x" + str(j)))
+            print(self.find_withtag(str(i) + "x" + str(j)))
 Canvas.draw_gamefield = _draw_gamefield
 
 def CPacman():
@@ -133,6 +158,16 @@ class screen:
         self.window = []
         self.sp = []
         self.error = []
+        self.canv = []
+        self.field = [[]]
+        self.brash = "0"
+        self.d = 0
+
+    def change_field(self, curr):
+        self.field = deepcopy(curr)
+
+    def change_brash(self, s):
+        self.brash = s
 
     def add(self, arg):
         self.window.append(arg)
@@ -145,17 +180,37 @@ class screen:
         self.add(arg)
         self.error = arg
 
+    def add_ca(self, arg):
+        self.add(arg)
+        self.canv = arg
+
     def remove(self):
         for el in self.window:
             destroy(el)
         self.window = []
         self.sp = []
         self.error = []
+        self.canv = []
+
+def Brush_wall():
+    app.change_brash("0")
+
+def Brush_pacman():
+    app.change_brash("<")
+
+def Brush_cherry():
+    app.change_brash("c")
+
+def Brush_apple():
+    app.change_brash("a")
+
+def Brush_food():
+    app.change_brash(".")
 
 def menu_game():
     app.remove()
-    fr = Frame(bg = "black")
-    fr.pack()
+    fr = Frame(bg = "black", )
+    fr.pack(padx = 10, pady = 10)
     lb = Label(fr, text = "Please, wait.")
     lb.pack()
     root.update()
@@ -164,14 +219,50 @@ def menu_game():
     c = Canvas(fr, width = settings.width - 100, height = settings.height - 100, bg = "white")
     c.pack(expand=YES, fill=BOTH)   
     c.draw_gamefield(curr)
-    app.add(c)
+    app.change_field(curr)
+    app.add_ca(c)
     app.add(fr)
-    bt = Button(root, text = "Back", command = menu_settings)
-    bt.pack()
+    fr2 = Frame()
+    fr2.pack()
+    app.add(fr2)
+    bt = Button(fr2, text = "Back", command = menu_settings)
+    bt.grid(row = 1, column = 1)
+    bt2 = Button(fr2, text = "Wall", command = Brush_wall)
+    bt2.grid(row = 1, column = 2)
+    bt3 = Button(fr2, text = "Food", command = Brush_food)
+    bt3.grid(row = 1, column = 3)
+    app.add(bt3)
+    bt4 = Button(fr2, text = "Pacman", command = Brush_pacman)
+    bt4.grid(row = 1, column = 4)
+    app.add(bt4)
+    bt5 = Button(fr2, text = "Apple", command = Brush_apple)
+    bt5.grid(row = 1, column = 5)
+    app.add(bt4)   
+    bt6 = Button(fr2, text = "Cherry", command = Brush_cherry)
+    bt6.grid(row = 1, column = 6)
+    app.add(bt6)       
+
+    h = len(app.field)
+    w = len(app.field[0])
+    for i in range(len(app.field)):
+        for j in range(len(app.field[0])):
+            if h > w:
+                i, j = j, i
+            print(str(i) + "x" + str(j), app.field[i][j])
+            #print(c.find_all())
+            print(c.find_withtag(str(i) + "x" + str(j)))
+            try:
+                c.tag_bind(str(i) + "x" + str(j), "<Button-1>", replace)
+            except:
+                print(i, j, "Error")
+    app.add(bt2)
     app.add(bt)
     app.add(fr)
 
 def Quit():
+    cmd = 'cleaner.bat'
+    PIPE = subprocess.PIPE
+    p = subprocess.Popen(cmd, shell=True) #stderr=subprocess.STDOUT
     exit(0)
 
 def ChangeSettings(arr):

@@ -1,18 +1,31 @@
-from tkinter import*
+from tkinter import *
+ 
 root = Tk()
-f1 = Frame(root, bg = "blue", width = 600, height = 600)
-f2 = Frame(root, bg = "black")
-f3 = Frame(root, bg = "darkblue")
-f1.grid(row = 1, column = 1, columnspan = 2)
-f2.grid(row = 1, column = 3)
-f3.grid(row = 2, column = 1, columnspan = 3)
-me = PhotoImage(file = "KrechetBest.png")
-c1 = Canvas(f1, width = 600, height = 600)
-c1.create_image(250, 300, image = me)
-c1.pack()
-t2 = Text(f2)
-t2.insert(END, "Andrew Ishutin is a developer of this programme. \nEmail: hazmozavr@gmail.com")
-t2.pack()
-bt3 = Button(f3, text = "Back", command = exit)
-bt3.pack()
+c = Canvas(bg='grey80')
+c.pack()
+ap = PhotoImage(file = "apple.png")
+
+def _square(self, x, y, d, tag):
+    width = 10
+    self.create_line(x, y, x + d, y, width = width, tag = tag)
+    self.create_line(x, y, x, y + d, width = width, tag = tag)    
+    self.create_line(x + d, y, x + d, y + d, width = width, tag = tag)
+    self.create_line(x, y + d, x + d, y + d, width= width, tag = tag)
+    self.create_image(x, y, anchor = "nw", image = ap, tag = tag)
+Canvas.square = _square
+
+def sq1(event):
+	print(event)
+	print(str(event)[26:])
+	print(str(event)[26:].replace("=", ""))
+	print(str(event)[26:].replace("=", "").replace("y", ""))
+	x, y = map(int, str(event)[26:].replace("=", "").replace("y", "")[:-1].split())
+	print(str((x - 1) // 100))
+	c.delete("sq" + str((x - 1) // 100))
+	c.create_text(30, 10, text = "!!!", anchor = "w", tag = "sq")
+
+c.square(2, 2, 100, "sq1")
+c.tag_bind("sq1", "<Button-1>", sq1)
+c.square(200, 200, 100, "sq2")
+c.tag_bind("sq2", "<Button-1>", sq1)
 root.mainloop()
