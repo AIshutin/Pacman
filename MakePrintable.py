@@ -1,3 +1,4 @@
+from tkinter import filedialog
 from tkinter import *
 from win32api import GetSystemMetrics
 from time import*
@@ -47,8 +48,8 @@ Canvas.stuf =_stuf
 def _draw_gamefield(self, curr):   
     h = len(curr)
     w = len(curr[0])
-    w_r = settings.width / w
-    h_r = settings.height / h
+    w_r = (settings.width - 100) / w
+    h_r = (settings.height - 100)/ h
     d = min(w_r, h_r)
     w_r = d
     h_r = d
@@ -70,7 +71,7 @@ def _draw_gamefield(self, curr):
                 self.stuf(x, y, d, ch)
 Canvas.draw_gamefield = _draw_gamefield
 
-def CreateGameField():
+def CPacman():
     cmd = 'helper.bat'
     PIPE = subprocess.PIPE
     p = subprocess.Popen(cmd, shell=True, stderr=subprocess.STDOUT)
@@ -87,7 +88,9 @@ def CreateGameField():
         except:
             sleep(1)
             break
-    fin = open(settings.source)
+
+def CreateGameField(source):
+    fin = open(source)
     arr = fin.readlines() + ['\n']
     fin.close()
     curr = []
@@ -96,10 +99,12 @@ def CreateGameField():
         if el.rstrip() == "":
             if len(curr) == 0:
                 continue
-            #print(curr)
-            #print(arr)
             return curr
         curr.append(el.rstrip())
+
+def GameCreating(source):
+    CPacman()
+    return CreateGameField(source)
 
 def destroy(obj):
     #print(obj)
@@ -154,9 +159,9 @@ def menu_game():
     lb = Label(fr, text = "Please, wait.")
     lb.pack()
     root.update()
-    curr = CreateGameField()
+    curr = GameCreating(settings.source)
     lb.destroy()
-    c = Canvas(fr, width = settings.width, height = settings.height, bg = "white")
+    c = Canvas(fr, width = settings.width - 100, height = settings.height - 100, bg = "white")
     c.pack(expand=YES, fill=BOTH)   
     c.draw_gamefield(curr)
     app.add(c)
@@ -176,46 +181,58 @@ def ChangeSettings(arr):
     fout.close()
     menu_game()
 
-def Error():
-    pass
+def Error(errorlist): # To do
+    app.error.delete("1.0", "end")
+    for el in errorlist:
+        app.error.insert("-1.0", "Incorrect form number " + str(el) + "\n")
 
 def com():
     arr = []
-    log = 0
+    log = []
     if app.sp[0].get() in  ["3", "6", "9", "12", "15", "18", "21", "24"]:
         arr.append(app.sp[0].get())
     else:
-        log = 1
+        log.append(1)
 
     if app.sp[1].get() in  ["3", "6", "9", "12", "15", "18", "21", "24"]:
         arr.append(app.sp[1].get())
     else:
-        log = 1
+        log.append(2)
+
     try:
         if 1 <= int(app.sp[-1].get()) <= 30 :
             arr.append(app.sp[-1].get())
         else:
-            log = 1
+            log.append(6)
     except:
-        log = 1
+        log.append(6)
 
-    if "2" <= app.sp[2].get() <= "9" :
-        arr.append(app.sp[2].get())
-    else:
-        log = 1
+    try:
+        if 2 <= int(app.sp[2].get()) <= 9 :
+            arr.append(app.sp[2].get())
+        else:
+            log.append(3)
+    except:
+        log.append(3)
 
-    if "1" <= app.sp[3].get() <= "9" :
-        arr.append(app.sp[3].get())
-    else:
-        log = 1
+    try:    
+        if 1 <= int(app.sp[3].get()) <= 9 :
+            arr.append(app.sp[3].get())
+        else:
+            log.append(4)
+    except:
+        log.append(4)
 
-    if "1" <= app.sp[4].get() <= "9" :
-        arr.append(app.sp[4].get())
-    else:
-        log = 1
+    try:  
+        if 1 <= int(app.sp[4].get()) <= 9 :
+            arr.append(app.sp[4].get())
+        else:
+            log.append(5)
+    except:
+        log.append(5)
     
-    if log == 1:
-        Error()
+    if log != list():
+        Error(sorted(log))
     else:
         ChangeSettings(arr)
 
@@ -280,12 +297,67 @@ def menu_settings():
     bt1.grid(row = 7, column = 2)
     app.add(bt1)
 
+    text = Text(fr)
+    text.grid(row = 8, column = 1, columnspan = 2)
+    app.add_es(text)
+
+def menu_credits():
+    app.remove()
+    f1 = Frame(root, bg = "blue", width = 600, height = 600)
+    f2 = Frame(root, bg = "black")
+    f3 = Frame(root, bg = "darkblue")
+    f1.grid(row = 1, column = 1, columnspan = 2)
+    f2.grid(row = 1, column = 3)
+    f3.grid(row = 2, column = 1, columnspan = 3)
+    c1 = Canvas(f1, width = 600, height = 600)
+    c1.create_image(250, 300, image = logo)
+    c1.pack()
+    t2 = Text(f2)
+    t2.insert(END, "Andrew Ishutin is a developer of this programme. \nEmail: hazmozavr@gmail.com")
+    t2.pack()
+    bt3 = Button(f3, text = "Back", command = menu_start)
+    bt3.pack()
+    app.add(f1)
+    app.add(f2)
+    app.add(f3)
+
+def menu_game_from_continue(fn):
+    app.remove()
+    fr = Frame(bg = "black")
+    fr.pack()
+    lb = Label(fr, text = "Please, wait.")
+    lb.pack()
+    root.update()
+    curr = CreateGameField(fn)
+    lb.destroy()
+    c = Canvas(fr, width = settings.width - 100, height = settings.height - 100, bg = "white")
+    c.pack(expand=YES, fill=BOTH)   
+    c.draw_gamefield(curr)
+    app.add(c)
+    app.add(fr)
+    bt = Button(root, text = "Back", command = menu_start)
+    bt.pack()
+    app.add(bt)
+    app.add(fr)
+
+def menu_contunue():
+    fn = filedialog.Open(filetypes = [('*.txt files', '.txt')]).show()
+    if fn == '':
+        return
+    menu_game_from_continue(fn)
+
 def menu_start():
     app.remove()
-    fr = Frame(bg = "blue")
+    fr = Frame()
     fr.pack()
     bt = Button(fr, text = "New game", command = menu_settings)
     bt.pack()
+    bt2 = Button(fr, text = "Continue", command = menu_contunue)
+    bt2.pack()
+    app.add(bt2)
+    bt3 = Button(fr, text = "Credits", command = menu_credits)
+    bt3.pack()
+    app.add(bt3)
     bt1 = Button(fr, text = "Quit", command = Quit)
     bt1.pack()
     app.add(fr)
@@ -293,12 +365,13 @@ def menu_start():
     app.add(bt1)
 
 source = "fields.sv"
-settings = prec(GetSystemMetrics(0) - 115, GetSystemMetrics(1) - 140, "3.3 alfa", source) #-15, -40
+settings = prec(GetSystemMetrics(0) - 15, GetSystemMetrics(1) - 40, "3.3 beta", source) #-15, -40
 root = Tk()
 app = screen()
-pc = PhotoImage(file='pacman.gif') 
-ap = PhotoImage(file='apple.png') 
-ch = PhotoImage(file='cherry.png')   
+pc = PhotoImage(file = "pacman.gif") 
+ap = PhotoImage(file = "apple.png") 
+ch = PhotoImage(file = "cherry.png")
+logo = PhotoImage(file = "KrechetBest.png")   
 root.title("Pacman v" + str(settings.version))
 root.geometry(str(settings.width) + 'x' + str(settings.height))
 menu_start()
