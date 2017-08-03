@@ -74,6 +74,9 @@ def CreateGameField():
     cmd = 'helper.bat'
     PIPE = subprocess.PIPE
     p = subprocess.Popen(cmd, shell=True, stderr=subprocess.STDOUT)
+    z = clock()
+    while clock() - z < 1:
+        root.update()
     while True:
         try:
             z = open("sys")
@@ -166,9 +169,12 @@ def menu_game():
 def Quit():
     exit(0)
 
-def ChangeSettings():
+def ChangeSettings(arr):
+    fout = open("settings.txt", "w")
+    for el in arr + ["<", "0", "a", "c", ".", "fields.sv"]:
+        print(el, file = fout)
+    fout.close()
     menu_game()
-    pass
 
 def Error():
     pass
@@ -176,33 +182,102 @@ def Error():
 def com():
     arr = []
     log = 0
-    valide = ["3", "6", "9", "12", "15", "18", "21", "24"]
-    for el in app.sp:
-        z = el.get()
-        if z not in valide:
+    if app.sp[0].get() in  ["3", "6", "9", "12", "15", "18", "21", "24"]:
+        arr.append(app.sp[0].get())
+    else:
+        log = 1
+
+    if app.sp[1].get() in  ["3", "6", "9", "12", "15", "18", "21", "24"]:
+        arr.append(app.sp[1].get())
+    else:
+        log = 1
+    try:
+        if 1 <= int(app.sp[-1].get()) <= 30 :
+            arr.append(app.sp[-1].get())
+        else:
             log = 1
-        arr.append(el.get())
+    except:
+        log = 1
+
+    if "2" <= app.sp[2].get() <= "9" :
+        arr.append(app.sp[2].get())
+    else:
+        log = 1
+
+    if "1" <= app.sp[3].get() <= "9" :
+        arr.append(app.sp[3].get())
+    else:
+        log = 1
+
+    if "1" <= app.sp[4].get() <= "9" :
+        arr.append(app.sp[4].get())
+    else:
+        log = 1
+    
     if log == 1:
         Error()
     else:
-        ChangeSettings()
+        ChangeSettings(arr)
+
+def range1(a, b):
+    arr = []
+    for i in range(a, b + 1):
+        arr.append(i)
+    return arr
 
 def menu_settings():
     app.remove()
     fr = Frame(root)
     fr.pack()
     app.add(fr)
+
     lb = Label(fr, text = "Width: ")
     lb.grid(row = 1, column = 1)
     app.add(lb)
     sc = Spinbox(fr, values = (3, 6, 9, 12, 15, 18, 21, 24))
     sc.grid(row = 1, column = 2)
     app.add_sp(sc)
+
+    lb = Label(fr, text = "Height: ")
+    lb.grid(row = 2, column = 1)
+    app.add(lb)
+    sc = Spinbox(fr, values = (3, 6, 9, 12, 15, 18, 21, 24))
+    sc.grid(row = 2, column = 2)
+    app.add_sp(sc)
+
+    lb = Label(fr, text = "Players: ")
+    lb.grid(row = 3, column = 1)
+    app.add(lb)
+    sc = Spinbox(fr, values = range1(2, 9))
+    sc.grid(row = 3, column = 2)
+    app.add_sp(sc)
+
+    lb = Label(fr, text = "Cherry: ")
+    lb.grid(row = 4, column = 1)
+    app.add(lb)
+    sc = Spinbox(fr, values = range1(1, 9))
+    sc.grid(row = 4, column = 2)
+    app.add_sp(sc)
+
+    lb = Label(fr, text = "Apples: ")
+    lb.grid(row = 5, column = 1)
+    app.add(lb)
+    sc = Spinbox(fr, values = range1(1, 13))
+    sc.grid(row = 5, column = 2)
+    app.add_sp(sc)
+
+    lb = Label(fr, text = "Minimal distance between players: ")
+    lb.grid(row = 6, column = 1)
+    app.add(lb)
+    sc = Spinbox(fr, values = range1(1, 30))
+    sc.grid(row = 6, column = 2)
+    app.add_sp(sc)
+
     bt = Button(fr, text = "Start Menu", command = menu_start)
-    bt.grid(row = 2, column = 1)
+    bt.grid(row = 7, column = 1)
     app.add(bt)
     bt1 = Button(fr, text = "Next", command = com)
-    bt1.grid(row = 2, column = 2)
+    bt1.grid(row = 7, column = 2)
     app.add(bt1)
 
 def menu_start():
@@ -216,11 +291,8 @@ def menu_start():
     app.add(fr)
     app.add(bt)
     app.add(bt1)
-   
-fin = open("settings.txt")
-data = fin.readlines()
-source = data[-1].rstrip()
-fin.close()
+
+source = "fields.sv"
 settings = prec(GetSystemMetrics(0) - 115, GetSystemMetrics(1) - 140, "3.3 alfa", source) #-15, -40
 root = Tk()
 app = screen()
