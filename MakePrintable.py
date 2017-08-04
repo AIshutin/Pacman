@@ -12,10 +12,20 @@ class prec:
         self.version = version
         self.source = source
 
+def _find_withtag(self, tag):
+    l = self.find_all()
+    #print("Line 17:", l)
+    v = []
+    for el in l:
+        if tag in self.gettags(el):
+            v.append(el)
+    return tuple(v)
+Canvas.find_withtag = _find_withtag
+
 def _square(self, x, y, d, tag):
     width = 5
     self.create_polygon(x, y, x + d, y, x + d, y + d, x, y + d, tag = tag, fill = "white")
-    self.create_line(x, y, x + d, y, width = width, tag = tag)
+    self.create_line(x, y, x + d, y, width = width, tag = tag) # tag = tag
     self.create_line(x, y, x, y + d, width = width, tag = tag)    
     self.create_line(x + d, y, x + d, y + d, width = width, tag = tag)
     self.create_line(x, y + d, x + d, y + d, width= width, tag = tag)
@@ -24,11 +34,19 @@ Canvas.square = _square
 def _wall(self, x, y, d, tag):
     width = 2
     self.square(x, y, d, tag)
-    self.create_line(x, y, x + d, y + d, width = width, tag = tag)
-    self.create_line(x + d, y, x, y + d, width = width, tag = tag)
-    self.create_line(x + d // 2, y, x + d / 2, y + d, width = width, tag = tag)
-    self.create_line(x, y + d // 2, x + d, y + d // 2, width = width, tag = tag)
+    a = self.create_line(x, y, x + d, y + d, width = width, tag = tag)
+    b = self.create_line(x + d, y, x, y + d, width = width, tag = tag)
+    c = self.create_line(x + d // 2, y, x + d / 2, y + d, width = width, tag = tag)
+    d = self.create_line(x, y + d // 2, x + d, y + d // 2, width = width, tag = tag)
+    '''print("{", self.find_withtag(tag))
+    print(self.gettags(a))
+    print(self.gettags(b))
+    print(self.gettags(c))
+    print(self.gettags(d))
+    print(a, b, c, d)
+    print(tag)
     print(self.find_withtag(tag))
+    print("}\n")'''
 Canvas.wall = _wall
 
 def _create_circle(self, x, y, r, **kwargs):
@@ -38,35 +56,39 @@ Canvas.create_circle = _create_circle
 def _food(self, x, y, d, tag):
     self.square(x, y, d, tag)
     self.create_circle(x + d // 2, y + d // 2, d // 4, width = 2, tag = tag)
-    print(self.find_withtag(tag))
+    #print(self.find_withtag(tag))
 Canvas.food = _food
 
 def _stuf(self, x, y, d, gif1, tag):
     self.square(x, y, d, tag)
     self.create_image(x, y, image = gif1, anchor = NW, tag= tag)
-    print(self.find_withtag(tag))
+    #print(self.find_withtag(tag))
 Canvas.stuf = _stuf
+
+def _delete_withtag(self, tag):
+    for el in self.find_withtag(tag):
+        self.delete(el)
+Canvas.delete_withtag = _delete_withtag
 
 def replace(event):
     c = app.canv
     x, y = map(int, str(event)[26:].replace("=", "").replace("y", "")[:-1].split())
-    #print(x, y)
     d = app.d
-    i = (x - 1) // d
-    j = (y - 1) // d
-    c.delete(str(j) + "x" + str(i))
-    #print(x, y, d, i, j)
-    app.field[i] = app.field[i][:j] + app.brash + app.field[i][j + 1:]
-    if app.brash == "0":
-        c.wall(i * d, j * d, d, str(i) + "x" + str("j"))
-    elif app.brash == "a":
-        c.stuf(i * d, j * d, d, ap, str(i) + "x" + str("j"))
-    elif app.brash == "c":
-        c.stuf(i * d, j * d, d, ch, str(i) + "x" + str("j"))
-    elif app.brash == ".":
-        c.food(i * d, j * d, d, str(i) + "x" + str("j"))
-    else:
-        c.stuf(i * d, j * d, d, pc ,str(i) + "x" + str("j"))
+    j = (x - 1) // d
+    i = (y - 1) // d
+    app.field[i] = app.field[i][:j] + app.brash + app.field[i][j + 1:] #app.field[i][j] = app.brash()
+    destroy(c)
+    app.canv = Canvas(app.fr, width = settings.width - 100, height = settings.height - 100, bg = "white")
+    app.canv.pack(expand=YES, fill=BOTH)   
+    app.canv.draw_gamefield(app.field)
+    h = len(app.field)
+    w = len(app.field[0])
+    for i in range(len(app.field)):
+        for j in range(len(app.field[0])):
+            if h > w:
+                i, j = j, i
+            app.canv.tag_blind_withtag(str(i) + "x" + str(j), "<Button-1>", replace)
+
 
 def _draw_gamefield(self, curr):   
     h = len(curr)
@@ -74,26 +96,23 @@ def _draw_gamefield(self, curr):
     w_r = (settings.width - 100) // w
     h_r = (settings.height - 100)// h
     d = min(w_r, h_r)
-    w_r = d
-    h_r = d
     app.d = d
     for i in range(h):
         for j in range(w):
-            x = j * w_r
-            y = i * h_r
+            x = j * d
+            y = i * d
             if (h > w):
                 x, y = y, x
             if curr[i][j] == "0":
-                print("!", str(i) + "x" + str(j), self.wall(x, y, d, str(i) + "x" + str(j)))
+                self.wall(x, y, d, str(i) + "x" + str(j))
             if curr[i][j] == ".":
-                print("!", str(i) + "x" + str(j), self.food(x, y, d, str(i) + "x" + str(j)))
+                self.food(x, y, d, str(i) + "x" + str(j))
             if curr[i][j] == "<":
-                print("!", str(i) + "x" + str(j), self.stuf(x, y, d, pc, str(i) + "x" + str(j)))
+                self.stuf(x, y, d, pc, str(i) + "x" + str(j))
             if curr[i][j] == "a":
-                print("!", str(i) + "x" + str(j), self.stuf(x, y, d, ap, str(i) + "x" + str(j)))
+                self.stuf(x, y, d, ap, str(i) + "x" + str(j))
             if curr[i][j] == "c":
-                print("!", str(i) + "x" + str(j), self.stuf(x, y, d, ch, str(i) + "x" + str(j)))
-            print(self.find_withtag(str(i) + "x" + str(j)))
+                self.stuf(x, y, d, ch, str(i) + "x" + str(j))
 Canvas.draw_gamefield = _draw_gamefield
 
 def CPacman():
@@ -162,6 +181,8 @@ class screen:
         self.field = [[]]
         self.brash = "0"
         self.d = 0
+        self.killed = []
+        self.fr = []
 
     def change_field(self, curr):
         self.field = deepcopy(curr)
@@ -183,6 +204,10 @@ class screen:
     def add_ca(self, arg):
         self.add(arg)
         self.canv = arg
+
+    def add_fr_of_ca(self, arg):
+        self.add(arg)
+        self.fr = arg
 
     def remove(self):
         for el in self.window:
@@ -207,9 +232,14 @@ def Brush_apple():
 def Brush_food():
     app.change_brash(".")
 
-def menu_game():
+def _tag_blind_withtag(self, tag, event, func):
+    for el in self.find_withtag(tag):
+        self.tag_bind(el, "<Button-1>", func)
+Canvas.tag_blind_withtag = _tag_blind_withtag
+
+def menu_map():
     app.remove()
-    fr = Frame(bg = "black", )
+    fr = Frame(bg = "black")
     fr.pack(padx = 10, pady = 10)
     lb = Label(fr, text = "Please, wait.")
     lb.pack()
@@ -221,7 +251,7 @@ def menu_game():
     c.draw_gamefield(curr)
     app.change_field(curr)
     app.add_ca(c)
-    app.add(fr)
+    app.add_fr_of_ca(fr)
     fr2 = Frame()
     fr2.pack()
     app.add(fr2)
@@ -248,13 +278,7 @@ def menu_game():
         for j in range(len(app.field[0])):
             if h > w:
                 i, j = j, i
-            print(str(i) + "x" + str(j), app.field[i][j])
-            #print(c.find_all())
-            print(c.find_withtag(str(i) + "x" + str(j)))
-            try:
-                c.tag_bind(str(i) + "x" + str(j), "<Button-1>", replace)
-            except:
-                print(i, j, "Error")
+            c.tag_blind_withtag(str(i) + "x" + str(j), "<Button-1>", replace)
     app.add(bt2)
     app.add(bt)
     app.add(fr)
@@ -270,7 +294,7 @@ def ChangeSettings(arr):
     for el in arr + ["<", "0", "a", "c", ".", "fields.sv"]:
         print(el, file = fout)
     fout.close()
-    menu_game()
+    menu_map()
 
 def Error(errorlist): # To do
     app.error.delete("1.0", "end")
@@ -297,7 +321,6 @@ def com():
             log.append(6)
     except:
         log.append(6)
-
     try:
         if 2 <= int(app.sp[2].get()) <= 9 :
             arr.append(app.sp[2].get())
@@ -436,6 +459,8 @@ def menu_contunue():
     if fn == '':
         return
     menu_game_from_continue(fn)
+
+
 
 def menu_start():
     app.remove()
