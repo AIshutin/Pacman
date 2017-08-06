@@ -17,7 +17,7 @@ Also it`s my first documentation, so lucky you are!
 But you almost have one hope: my email: hazmozavr@gmail.com or
 ask Elena Borisvna to tell you my contact.
 
-I also have some important information to tell you which
+I also have some information to tell you which
 explains why my code is these code.
 
 I afraid my Pacman.exe
@@ -106,8 +106,8 @@ def replace(event):
     app.canv = Canvas(app.fr, width = settings.width - 500, height = settings.height - 100, bg = "white")
     app.canv.pack(expand=YES, fill=BOTH)   
     app.canv.draw_gamefield(app.field)
-    app.canv.HotKeys("<Button-1>", replace)
     app.canv.normalize()
+    app.canv.HotKeys("<Button-1>", replace)
 
 
 def _draw_gamefield(self, curr):   
@@ -121,8 +121,6 @@ def _draw_gamefield(self, curr):
         for j in range(w):
             x = j * d
             y = i * d
-            if (h > w):
-                x, y = y, x
             if curr[i][j] == "0":
                 self.wall(x, y, d, str(i) + "x" + str(j))
             if curr[i][j] == ".":
@@ -177,7 +175,6 @@ def destroy(obj): #function for noraml deleting any object. Even frames. Even gr
     if (not obj):
         return
     try:
-        #print(winfo_children())
         if obj.winfo_children():
             for el in obj.winfo_children():
                 destroy(el)
@@ -199,7 +196,7 @@ def destroy(obj): #function for noraml deleting any object. Even frames. Even gr
 def _normalize(self): # Make Canvas normal size
     z = self.bbox(ALL)
     a, b, c, d = z[0], z[1], z[2], z[3]
-    self.config(height = abs(a - c), width = abs(b - d))
+    self.config(height = abs(b - d), width = abs(a - c))
 Canvas.normalize = _normalize
 
 class screen:
@@ -297,8 +294,6 @@ def _HotKeys(self, key, func):
     w = len(app.field[0])
     for i in range(len(app.field)):
         for j in range(len(app.field[0])):
-            if h > w:
-                i, j = j, i
             self.tag_blind_withtag(str(i) + "x" + str(j), key, func)
 Canvas.HotKeys = _HotKeys
 
@@ -420,6 +415,8 @@ def com():
     if log != list():
         Error(sorted(log))
     else:
+        if arr[1] > arr[0]: # Turning gamefield 
+            arr[0], arr[1] = arr[1], arr[0]
         ChangeSettings(arr)
 
 def range1(a, b):
@@ -522,6 +519,7 @@ class team_data():
         self.cords = dict()
         self.logs = dict()
         self.shields = dict()
+        self.hist = dict()
     
     def add_team(self, s, score, col):
         self.nm.append(s)
@@ -532,19 +530,13 @@ class team_data():
         self.logs[s] = False
         self.cords [s] = []
         self.shields[s] = 0
+        self.hist[s] = [[-1, -1]]
 
     def add_points(self, team, n):
         self.curr[team] += n
 
     def add_apple_points(self, team):
         self.apple[team] += settings.apple
-
-    def end(self):
-        ans = []
-        for el in self.nm:
-            self.score[el] += self.apple[el] + self.curr[el]
-            ans.append([el, self.score[el]])
-        return ans
 
     def kill(self, killer, food):
         self.curr[killer] += self.curr[food]
@@ -560,6 +552,7 @@ class team_data():
         self.cords = dict()
         self.logs = dict()
         self.shields = dict()
+        self.hist = dict()
 
 class score_table(): #Special class for making and updating score tables 
     
@@ -600,8 +593,7 @@ def update_score():
     app.score.update()
 
 def allow(cord1, cord2): #ToDo
-    global END_GAME
-    if END_GAME == 1:
+    if parametres.END_GAME == 1:
         return False
     if app.field[cord2[0]][cord2[1]] == "0":
         return False
@@ -615,22 +607,29 @@ def allow(cord1, cord2): #ToDo
     en = -1
     if cord1 == cord2:
         return False
+
     for el in teams.nm:
         if teams.cords[el] == cord1:
             st = el
         elif teams.cords[el] == cord2:
             en = el
+
+    if parametres.Zig_Zag == 1 and len(teams.hist[st]) >= 1 and cord2 == teams.hist[st][-1]:
+        return False
+
     if en != -1:
         if not teams.logs[st]: #cherry factor
             return False
-        if SHIELD == 1 and teams.shields[en] == 1:
+        if parametres.SHIELD == 1 and teams.shields[en] == 1:
             return False
+        archive.add([deepcopy(teams), deepcopy(app.field), deepcopy(parametres)])
         for el in teams.nm:
             teams.shields[el] = 0
         teams.kill(st, en)
         teams.cords[en] = [-1, -1]
-        END_GAME = 1 #End of the game
+        parametres.END_GAME = 1 #End of the game
     else:
+        archive.add([deepcopy(teams), deepcopy(app.field), deepcopy(parametres)])
         if app.field[cord2[0]][cord2[1]] == "a":
             teams.add_apple_points(st)
         if app.field[cord2[0]][cord2[1]] == "c":
@@ -639,6 +638,7 @@ def allow(cord1, cord2): #ToDo
             teams.add_points(st, 1)
     teams.cords[st] = cord2
     app.score.update()
+    teams.hist[st].append(cord1)
     return True
 
 def replace2(event):
@@ -719,16 +719,44 @@ def menu_end():
     Bt1 = Button(fr2, text = "Save", command = save_game)
     Bt1.grid(row = 1, column = 2)
 
-
+class hist:
+    
+    def __init__(self):
+        self.changes = []   
+    
+    def add(self, z):
+        self.changes.append(z)
+    
+    def last(self):
+        if len(self.changes) < 1:
+            return False
+        q = self.changes[-1]
+        self.changes.pop(-1) #?
+        return q
 
 def new_game():
-    global END_GAME
-    END_GAME = 0
+    global archive
+    parametres.END_GAME = 0
     for el in teams.nm:
         teams.score[el] += teams.curr[el] + teams.apple[el]
         teams.curr[el] = teams.apple[el] = 0
         teams.cords[el] = []
+        teams.hist[el] = [[-1, -1]]
+    archive = hist()
     menu_settings()
+
+def prev_change(): #ToDo
+    global teams, app, parametres
+    z = archive.last()
+    if z == False:
+        return
+    teams = deepcopy(z[0])
+    app.field = deepcopy(z[1])
+    parametres = deepcopy(z[2])
+    app.canv.draw_gamefield(app.field)
+    app.score.update()
+    app.canv.HotKeys("<Button-1>", replace2)
+    app.canv.HotKeys("<Button-3>", replace3)
 
 def menu_game():
     app.remove()
@@ -746,7 +774,7 @@ def menu_game():
     fr3.grid(row = 2, column = 1, columnspan = 5)
     app.add(fr2)
     app.add(fr3)
-    bt1 = Button(fr3, text = "Back", command = menu_teams)
+    bt1 = Button(fr3, text = "Back", command = menu_map)
     bt2 = Button(fr3, text = "Quit", command = menu_end)
     bt1.grid(row = 1, column = 1)
     bt2.grid(row = 1, column = 5)
@@ -754,6 +782,8 @@ def menu_game():
     app.add(bt2)
     bt = Button(fr3, text = "New round", command = new_game)
     bt.grid(row = 1, column = 4)
+    bt3 = Button(fr3, text = "Return", command = prev_change)
+    bt3.grid(row = 1, column = 3)
     app.add(bt)
     n = settings.n
     st = score_table(fr2)
@@ -822,13 +852,20 @@ def goto_menu_teams():
     except:
         log.append(2)
 
-    global SHIELD
     if app.sp[2].get() == "Yes":
-        SHIELD = 0
+        parametres.SHIELD = 0
     elif app.sp[2].get() == "No":
-        SHIELD = 1
+        parametres.SHIELD = 1
     else:
         log.append(3)
+
+    if app.sp[3].get() == "Yes":
+        parametres.Zig_Zag = 0
+    elif app.sp[3].get() == "No":
+        parametres.Zig_Zag = 1
+    else:
+        log.append(4)
+
     if log != []:
         Error(log)
     else:
@@ -860,14 +897,21 @@ def menu_new_party():
     sp.grid(row = 3, column = 1 + z)
     app.add_sp(sp)
 
+    lb = Label(text = "Is it possible to move back and forth: ")
+    lb.grid(row = 4, column = 1, columnspan = z)
+    app.add(lb)
+    sp = Spinbox(values = ("Yes", "No"))
+    sp.grid(row = 4, column = 1 + z)
+    app.add_sp(sp)
+
     bt0 = Button(text = "Back", command = menu_start)
-    bt0.grid(row = 4, column = 1)
+    bt0.grid(row = 5, column = 1)
     app.add(bt0)
     bt = Button(text = "Next", command = goto_menu_teams)
-    bt.grid(row = 4, column = z + 1)
+    bt.grid(row = 5, column = z + 1)
     app.add(bt)
     er = Text()
-    er.grid(row = 5, column = 1, columnspan = 1 + z)
+    er.grid(row = 6, column = 1, columnspan = 1 + z)
     app.add_es(er)
 
 def menu_teams():
@@ -918,9 +962,17 @@ def menu_start():
     app.add(bt)
     app.add(bt1)
 
+class param:
+    
+    def __init__(self, END_GAME, SHIELD, Zig_Zag):
+        self.END_GAME = END_GAME #not const but flag. Sorry for style. 1 - game is ended, 0 it`s not
+        self.SHIELD = SHIELD #not cost but flag. 0 - Shields don`t exist in the game. 1 - it do
+        self.Zig_Zag = Zig_Zag # 0 -> it is possible to play as: move1. (0, 1), move2 (0, 0), move3 (0, 1)... . 1 - it`s impossible
+
 teams = team_data() #Storage for information about teams
 source = "fields.sv"
-settings = prec(GetSystemMetrics(0) - 15, GetSystemMetrics(1) - 40, "3.4", source, 5) 
+settings = prec(GetSystemMetrics(0) - 15, GetSystemMetrics(1) - 40, "3.4.1", source, 5) 
+archive = hist()
 #^Storage for const information^
 root = Tk() #Main window
 app = screen()
@@ -930,7 +982,6 @@ ch = PhotoImage(file = "cherry.png")
 logo = PhotoImage(file = "KrechetBest.png") #My logo
 root.title("Pacman v" + str(settings.version))
 root.geometry(str(settings.width) + 'x' + str(settings.height)) 
-END_GAME = 0 #not const but flag. Sorry for style. 1 - game is ended, 0 it`s not
-SHIELD = 0 #not cost but flag. 0 - Shields don`t exist in the game. 1 - it do
+parametres = param(0, 0, 0)
 menu_start()
 root.mainloop()
