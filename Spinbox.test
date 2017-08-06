@@ -1,8 +1,0 @@
-from tkinter import*
-root = Tk()
-s = Spinbox(values = (3, 6, 9, 12, 15, 18, 21, 24))
-s.pack()
-root.update()
-sleep(10)
-print(s.bbox)
-root.mainloop()
