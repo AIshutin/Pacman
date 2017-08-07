@@ -201,7 +201,7 @@ class ad_vid: #Not for moding, please. #A vidget for my ad
     def __init__(self, root, **keyargs):
         self.fr = Frame(root, **keyargs)
         self.canv = Canvas(self.fr)
-        self.text = Message(self.fr, text = "AIs Software\nAndrew Ishutin\nWant an application like this?\nYou can send a message to:\nEmail: hazmozavr@gmail.com\nVk: https://vk.com/aishutin2002", width = 2002)
+        self.text = Message(self.fr, text = "AIs Software\nAndrew Ishutin\nYou can send a message to:\nEmail: hazmozavr@gmail.com\nVk: https://vk.com/aishutin2002", width = 2002)
 
     def pack(self, **keyargs):
         self.fr.pack(**keyargs)
@@ -352,12 +352,12 @@ def load_game():
         return
 
 def save_file(): #Save map
-    fout_name = filedialog.SaveAs(root, filetypes = [('*.txt files', '.txt')]).show()
+    fout_name = filedialog.SaveAs(root, filetypes = [('*.map files', '.map')]).show()
     if not fout_name:
         return
     fout = open(fout_name, "w")
     for el in app.field:
-        print(el, teams.score[el], teams.col[el], file = fout)
+        print(el, file = fout)
     fout.close()
 
 def replace(event): #Changes some ceil.
@@ -390,7 +390,7 @@ def CPacman(): #Function for working with C++ Pacman.exe with Batch commands
     PIPE = subprocess.PIPE
     p = subprocess.Popen(cmd, shell=True, stderr=subprocess.STDOUT)
     z = clock()
-    while clock() - z < 1:
+    while clock() - z < 2:
         root.update()
     while True:
         try:
@@ -451,7 +451,7 @@ def Quit(): #Quit with killing 3 working pacman.exe
     exit(0)
 
 def ChangeSettings(arr): #Function for writing in file for communicating with pacman.exe 
-    fout = open("settings.txt", "w") #BadCode
+    fout = open("settings.txt", "w")
     for el in arr + ["<", "0", "a", "c", ".", "fields.sv"]:
         print(el, file = fout)
     fout.close()
@@ -510,7 +510,7 @@ def com(): #Function that read information from setting menu
         log.append(4)
     
     #Option for creating map only by user
-    if int(str(app.cb_var)[-1]) == 1 and "1" not in log and "2" not in log:
+    if int(app.cb_var.get()) == 1 and "1" not in log and "2" not in log:
         if arr[1] > arr[0]: # Turning gamefield 
             arr[0], arr[1] = arr[1], arr[0]
         app.field = ["0" * int(arr[0]) for i in range(int(arr[1]))]
@@ -535,7 +535,7 @@ def menu_map_continue(fn):
     menu_map()
 
 def menu_continue_map():
-    fn = filedialog.Open(filetypes = [('*.txt files', '.txt')]).show()
+    fn = filedialog.Open(filetypes = [('*.map files', '.map')]).show()
     if fn == '':
         return
     menu_map_continue(fn)
@@ -693,7 +693,7 @@ def goto_menu_game():
         n += el.count('<')
     if n != settings.n:
         return
-    #Error message #ToDo
+    #Error message
     DefineTeamsLocation()
     menu_game()
 
@@ -777,12 +777,10 @@ def menu_settings(): #Menu for defining global gamefield parametres
     sc.grid(row = 5, column = 2)
     app.add_sp(sc)
 
-    lb = Label(app.cw, text = "Don`t generate map", font = MyFont)
-    lb.grid(row = 6, column = 1)
     var = IntVar()
+    cb = Checkbutton(app.cw, text = "Don`t generate map", variable = var,  onvalue="1", offvalue="0")
+    cb.grid(row = 6, column = 1, columnspan = 2)
     app.cb_var = var
-    cb = Checkbutton(app.cw, text = "Don`t", variable = var)
-    cb.grid(row = 6, column = 2)
 
     bt = Button(fr_nav, text = parametres.SPACES + "Back" + parametres.SPACES, command = menu_teams)
     bt.grid(row = 6, column = 1)
@@ -907,7 +905,7 @@ def menu_new_party(): #Menu for creating ew session
     en.grid(row = 2, column = 2)
     app.add_sp(en)
 
-    lb = Label(fr_set, text = "Is it possible to be killed two times in a row: ")
+    lb = Label(fr_set, text = "Is it possible to be killed two times in a row:")
     lb.grid(row = 3, column = 1, columnspan = 1)
     sp = Spinbox(fr_set, values = ("Yes", "No"), font = MyFont)
     sp.grid(row = 3, column = 2)
@@ -998,7 +996,7 @@ ch = PhotoImage(file = "cherry.png")
 logo = PhotoImage(file = "KrechetBest.png") #My logo
 theme = PhotoImage(file = "Small Krechet.png")
 root.title("Pacman v" + str(settings.version))
-root.geometry(str(settings.width) + 'x' + str(settings.height)) 
+root.geometry(str(settings.width) + 'x' + str(settings.height))
 parametres = param(0, 0, "         ")
 font.nametofont('TkDefaultFont').configure(size = 30)
 MyFont = font.Font(weight='bold', size = 20)
