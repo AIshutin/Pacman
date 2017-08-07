@@ -317,9 +317,6 @@ class score_table(): #Special class for making and updating score tables
             self.s[i].destroy()
         self.fr.destroy()
 
-def update_score(): #ToDel
-    app.score.update()
-
 def save_game():
     fn = filedialog.SaveAs(root, filetypes = [('*.game files', '.game')]).show()
     if not fn:
@@ -364,19 +361,29 @@ def save_file(): #Save map
     fout.close()
 
 def replace(event): #Changes some ceil.
-    #I know that I can optimize it, but there is some bug, that doesn`t allow to change one ceil twice.
     c = app.canv
     x, y = map(int, str(event)[str(event).find("x=") + 2:].replace("=", "").replace("y", "")[:-1].split())
     d = app.d
     j = (x - 1) // d
     i = (y - 1) // d
     app.field[i] = app.field[i][:j] + app.brash + app.field[i][j + 1:] #app.field[i][j] = app.brash()
-    destroy(c)
-    app.canv = Canvas(app.fr, width = settings.width - 500, height = settings.height - 100, bg = "white")
-    app.canv.pack(expand=YES, fill=BOTH)   
-    app.canv.draw_gamefield(app.field)
-    app.canv.normalize()
-    app.canv.HotKeys("<Button-1>", replace)
+    
+    c.delete_withtag(str(i) + "x" + str(j))
+    x = j * d
+    y = i * d
+    if app.field[i][j] == "0":
+        c.wall(x, y, d, str(i) + "x" + str(j))
+    if app.field[i][j] == ".":
+        c.food(x, y, d, str(i) + "x" + str(j))
+    if app.field[i][j] == "<":
+        c.stuf(x, y, d, pc, str(i) + "x" + str(j))
+    if app.field[i][j] == "a":
+        c.stuf(x, y, d, ap, str(i) + "x" + str(j))
+    if app.field[i][j] == "c":
+        c.stuf(x, y, d, ch, str(i) + "x" + str(j))
+    if app.field[i][j] == "e": #empty
+        c.square(x, y, d, str(i) + "x" + str(j))
+    app.canv.tag_blind_withtag(str(i) + "x" + str(j), "<Button-1>", replace)
 
 def CPacman(): #Function for working with C++ Pacman.exe with Batch commands
     cmd = 'helper.bat'
@@ -594,14 +601,21 @@ def replace2(event): #function that moves pacmans in the game
     d = app.d
     j = (x - 1) // d
     i = (y - 1) // d
+
     if allow(app.f, [i, j]): #Changing gamefield
-        app.brash = "<"
         i = app.f[0]
         j = app.f[1]
         app.field[i] = app.field[i][:j] + "e" + app.field[i][j + 1:]
+        app.canv.delete_withtag(str(i) + "x" + str(j))
+        app.canv.square(app.f[1] * d, app.f[0] * d, d, str(i) + "x" + str(j))
+        app.canv.tag_blind_withtag(str(i) + "x" + str(j), "<Button-3>", replace3)
+        app.canv.tag_blind_withtag(str(i) + "x" + str(j), "<Button-1>", replace2)
+        app.brash = "<"
         replace(event)
-    app.canv.HotKeys("<Button-1>", replace2)
-    app.canv.HotKeys("<Button-3>", replace3)
+        j = (x - 1) // d
+        i = (y - 1) // d
+        app.canv.tag_blind_withtag(str(i) + "x" + str(j), "<Button-1>", replace2)
+        app.canv.tag_blind_withtag(str(i) + "x" + str(j), "<Button-3>", replace3)
 
 def replace3(event): #Saving our starting location
     c = app.canv
@@ -615,7 +629,7 @@ def prev_change(): #Function that allows to return to earlier state
     global teams, app, parametres
     z = archive.last()
     if z == False:
-        return
+        return False
     teams = deepcopy(z[0])
     app.field = deepcopy(z[1])
     parametres = deepcopy(z[2])
@@ -623,6 +637,7 @@ def prev_change(): #Function that allows to return to earlier state
     app.score.update()
     app.canv.HotKeys("<Button-1>", replace2)
     app.canv.HotKeys("<Button-3>", replace3)
+    return True
 
 def PrepareForGame(): #Function that adds teams from team menu
     n = settings.n
@@ -719,6 +734,13 @@ def goto_menu_teams():
         Error(log)
     else:
         menu_teams()
+
+def goto_map_from_game(): #Resets map to the normal state
+    while prev_change():
+        pass
+    for el in teams.nm:
+        teams.cords[el] = [-1, -1]
+    menu_map()
 
 def menu_settings(): #Menu for defining global gamefield parametres
     standart_menu()
@@ -848,7 +870,7 @@ def menu_game(): #Menu for playing
     c.normalize()
     app.add_fr_of_ca(app.cw)
     app.add_ca(c)
-    bt1 = Button(app.bw, text = "Back", command = menu_map)
+    bt1 = Button(app.bw, text = "Back", command = goto_map_from_game)
     bt2 = Button(app.bw, text = "Quit", command = menu_end)
     bt1.grid(row = 1, column = 1)
     bt2.grid(row = 1, column = 5)
@@ -947,7 +969,7 @@ def menu_teams(): #Menu for creating teams
 
 def menu_start(): #Start menu
     app.remove()
-    font.nametofont('TkDefaultFont').configure(size=30)
+    font.nametofont('TkDefaultFont').configure(size = 30)
     fr_main = Frame(bg = "pink")
     fr_main.pack()
     app.add(fr_main)
@@ -963,7 +985,7 @@ def menu_start(): #Start menu
 
 teams = team_data() #Storage for information about teams
 source = "fields.sv"
-settings = prec(GetSystemMetrics(0) - 15, GetSystemMetrics(1) - 40, "3.4.2", source, 5) 
+settings = prec(GetSystemMetrics(0) - 15, GetSystemMetrics(1) - 40, "3.5", source, 5) 
 archive = hist()
 #^Storage for const information^
 width = 50
@@ -978,7 +1000,7 @@ theme = PhotoImage(file = "Small Krechet.png")
 root.title("Pacman v" + str(settings.version))
 root.geometry(str(settings.width) + 'x' + str(settings.height)) 
 parametres = param(0, 0, "         ")
-font.nametofont('TkDefaultFont').configure(size=30)
+font.nametofont('TkDefaultFont').configure(size = 30)
 MyFont = font.Font(weight='bold', size = 20)
 menu_start()
 root.mainloop()
