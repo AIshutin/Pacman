@@ -201,7 +201,7 @@ class ad_vid: #Not for moding, please. #A vidget for my ad
     def __init__(self, root, **keyargs):
         self.fr = Frame(root, **keyargs)
         self.canv = Canvas(self.fr)
-        self.text = Message(self.fr, text = "AIs Software\nAndrew Ishutin\nYou can send a message to:\nEmail: hazmozavr@gmail.com\nVk: https://vk.com/aishutin2002", width = 2002)
+        self.text = Message(self.fr, text = "AI`s Software\n", width = 2002)
 
     def pack(self, **keyargs):
         self.fr.pack(**keyargs)
@@ -329,6 +329,7 @@ def save_game():
 
 def load_game():
     teams.reset()
+    parametres.END_GAME = 0
     fn = filedialog.Open(root, filetypes = [('*.game files', '.game')]).show()
     if not fn:
         return
@@ -466,23 +467,26 @@ def com(): #Function that read information from setting menu
     global app
     arr = [] #Good information from user
     log = [] #User`s mistakes
-
+    spec1 = False #Special error number 1
+    spec2 = False #Special error number 2
     #Width
     if app.sp[0].get() in  ["3", "6", "9", "12", "15", "18", "21", "24"]:
-        arr.append(app.sp[0].get())
+        arr.append(int(app.sp[0].get()))
     else:
         log.append(1)
 
     #Height
     if app.sp[1].get() in  ["3", "6", "9", "12", "15", "18", "21", "24"]:
-        arr.append(app.sp[1].get())
+        arr.append(int(app.sp[1].get()))
     else:
         log.append(2)
 
     #Minimal distance between player and player
     try:
-        if 1 <= int(app.sp[-1].get()) <= 30 :
-            arr.append(app.sp[-1].get())
+        if 1 <= int(app.sp[-1].get()) <= 30:
+            arr.append(int(app.sp[-1].get()))
+            if ((arr[0] - 1) // arr[2] + 1) * ((arr[1] - 1) // arr[2] + 1) < settings.n:
+                spec1 = True
         else:
             log.append(5)
     except:
@@ -494,7 +498,7 @@ def com(): #Function that read information from setting menu
     #Cherry
     try:    
         if 0 <= int(app.sp[2].get()) <= 9 :
-            arr.append(app.sp[2].get())
+            arr.append(int(app.sp[2].get()))
         else:
             log.append(3)
     except:
@@ -503,12 +507,15 @@ def com(): #Function that read information from setting menu
     #Apple
     try:  
         if 0 <= int(app.sp[3].get()) <= 9 :
-            arr.append(app.sp[3].get())
+            arr.append(int(app.sp[3].get()))
         else:
             log.append(4)
     except:
         log.append(4)
-    
+
+    if arr[-1] + arr[-2] + arr[-3] > arr[0] * arr[1]:
+        spec2 = True
+
     #Option for creating map only by user
     if int(app.cb_var.get()) == 1 and "1" not in log and "2" not in log:
         if arr[1] > arr[0]: # Turning gamefield 
@@ -517,9 +524,13 @@ def com(): #Function that read information from setting menu
         menu_map()
         return
 
-    if log != list(): #There are some mistakes
+    if log != list() or spec1 or spec2: #There are some mistakes
         Error(sorted(log))
-    else:
+        if spec1:
+            app.error.insert("-1.0", "The distance between players is too big for this gamefield.")
+        if spec2:
+            app.error.insert("-1.0", "Too many objects for this gamefield.")
+    else:   
         if arr[1] > arr[0]: # Turning gamefield 
             arr[0], arr[1] = arr[1], arr[0]
         ChangeSettings(arr)
@@ -736,8 +747,11 @@ def goto_menu_teams():
         menu_teams()
 
 def goto_map_from_game(): #Resets map to the normal state
-    while prev_change():
-        pass
+    if len(archive.changes) >= 1:
+        global teams, app, parametres
+        z = deepcopy(archive.changes[0])
+        [teams, app.field, parametres] = z
+        archive.changes = []
     for el in teams.nm:
         teams.cords[el] = [-1, -1]
     menu_map()
@@ -803,7 +817,7 @@ def menu_credits(): #My menu. Please don`t modify
     c1.create_image(250, 300, image = logo)
     c1.pack()
     t2 = Text(f2, font = MyFont, width = width, height = height)
-    t2.insert(END, "Andrew Ishutin is a developer of this program. \nEmail: hazmozavr@gmail.com")
+    t2.insert(END, "Andrew Ishutin is a developer of this program.\nYou can send a message to:\nEmail: hazmozavr@gmail.com\nVk: https://vk.com/aishutin2002")
     t2.pack()
     bt3 = Button(f3, text = "Back", command = menu_start)
     bt3.pack()
@@ -986,7 +1000,7 @@ source = "fields.sv"
 settings = prec(GetSystemMetrics(0) - 15, GetSystemMetrics(1) - 40, "3.5", source, 5) 
 archive = hist()
 #^Storage for const information^
-width = 50
+width = 52
 height = 5
 root = Tk() #Main window
 app = screen()
