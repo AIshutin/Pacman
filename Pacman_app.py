@@ -997,7 +997,8 @@ def menu_start(): #Start menu
 
 teams = team_data() #Storage for information about teams
 source = "fields.sv"
-settings = prec(GetSystemMetrics(0) - 15, GetSystemMetrics(1) - 40, "3.5", source, 5) 
+#settings = prec(1366 - 15, 768 - 40, "3.5", source, 5) #GetSystemMetrics(0) - 15, GetSystemMetrics(1) - 40,
+settings = prec(GetSystemMetrics(0) - 15, GetSystemMetrics(1) - 40, "3.5", source, 5) #
 archive = hist()
 #^Storage for const information^
 width = 52

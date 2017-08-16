@@ -192,7 +192,7 @@ bool GenField2(int deep) { //Function that places object on gamefield
 }
 
 //working with user;
-
+/**
 void write13(ofstream file, vector<string> GameField) { //Function that writes gamefield to file
 	for (int i = 0; i < width + 2; i++) file << wall;
 	file << endl;
@@ -203,7 +203,7 @@ void write13(ofstream file, vector<string> GameField) { //Function that writes g
 	}
 	for (int i = 0; i < width + 2; i++) file << wall;
 	file << endl << endl;
-}
+}**/
 
 set<string> positive;
 
@@ -327,7 +327,7 @@ int main() {
 		unarchive();
 		if (IsConnected()) {
 			if (!GenField2(0)) continue;
-			/**for (int i = 0; i < width + 2; i++) cout << wall;
+			for (int i = 0; i < width + 2; i++) cout << wall;
 			cout << endl;
 			for (int i = 0; i < length; i++){
 			cout << wall;
@@ -335,7 +335,7 @@ int main() {
 			cout << wall << endl;
 			}
 			for (int i = 0; i < width + 2; i++) cout << wall;
-			cout << endl << endl;**/
+			cout << endl << endl;
 			/**string answer;
 			cout << "Save it? ";
 			cin >> answer;**/
