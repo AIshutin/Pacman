@@ -7,6 +7,7 @@
 #include <random>
 #include <set>
 #include <queue>
+#include <ctime>
 
 using namespace std;
 
@@ -249,6 +250,7 @@ void unarchive() { //Fuction that makes from list of modules normal gamefield
 }
 
 int main() {
+	srand(time(NULL) % 1000000000);
 	//getting conditions of game field
 	ifstream settings("settings.txt");
 	ifstream modules("data.gm");

@@ -1,6 +1,5 @@
 from copy import*
 from tkinter import filedialog
-#import tkinter.ttk as ttk
 import tkinter.font as font
 import tkinter
 from win32api import GetSystemMetrics #For screen resolution
@@ -133,6 +132,50 @@ def _HotKeys(self, key, func):
             self.tag_blind_withtag(str(i) + "x" + str(j), key, func)
 tkinter.Canvas.HotKeys = _HotKeys
 
+tkinter.Entry._insert1 = tkinter.Entry.insert
+def _insert(self, n, text):
+    self._insert1(n, lang.translate(text))
+tkinter.Entry.insert = _insert
+
+#Shortcuts&more
+def Button(root = None, **keyargs): # Function for fast creating buttons with custom parametres for fast modifing
+    z = tkinter.Button(root, **keyargs)
+    app.add(z)
+    z.config(text = lang.translate(z.config()["text"][-1]))
+    return z
+
+def Canvas(root = None, **keyargs): # Function for fast creating canvases with custom parametres for fast modifing
+    z = tkinter.Canvas(root, **keyargs)
+    app.add(z)
+    return z
+
+def Frame(root = None, **keyargs): # Function for fast creating frames with custom parametres for fast modifing
+    z = tkinter.Frame(root, **keyargs)
+    app.add(z)
+    return z
+
+def Label(root = None, **keyargs):
+    z = tkinter.Label(root, **keyargs)
+    app.add(z)
+    z.config(text = lang.translate(z.config()["text"][-1]))
+    return z
+
+def Message(root = None, **keyargs):
+    text = ""
+    for el in keyargs:
+        #print(el)
+        if el == "text":
+            print(keyargs)
+
+            text = keyargs[el]
+    z = tkinter.Message(root, **keyargs)
+    if text != "":
+        z.config(text = lang.translate(text))
+    else:
+        z.config(text = "")
+    app.add(z)
+    return z
+
 #Creating classes
 class prec: 
     def __init__(self, width, height, version, source, apple):
@@ -199,8 +242,8 @@ class screen: #Represents what is on the screen and allows commands outside menu
 class ad_vid: #Not for moding, please. #A vidget for my ad
     
     def __init__(self, root, **keyargs):
-        self.fr = tkinter.Frame(root, **keyargs)
-        self.canv = tkinter.Canvas(self.fr)
+        self.fr = Frame(root, **keyargs)
+        self.canv = Canvas(self.fr)
         self.text = tkinter.Message(self.fr, text = "AI`s Software\n", width = 2002)
 
     def pack(self, **keyargs):
@@ -285,7 +328,7 @@ class param: #Speccial class for some parametres.
 class score_table(): #Special class for making and updating score tables 
     
     def __init__(self, root):
-        self.fr = tkinter.Frame(root)
+        self.fr = Frame(root)
         self.t = []
         self.s = []
         self.n = settings.n
@@ -316,6 +359,75 @@ class score_table(): #Special class for making and updating score tables
             self.t[i].destroy()
             self.s[i].destroy()
         self.fr.destroy()
+
+class language: #module for translating
+    lang = {"English": 1, "Русский": 0} #list of avaliable languages
+    lang_list = ["Русский", "English"] # real list
+
+    def __init__(self):
+        self.ru = { # English to Russian dictionary
+            "Load": "Загрузить",
+            "Save": "Сохранить",
+            "Next": "Далее",
+            "Back": "Назад",
+            "Continue": "Продолжить",
+            "New game": "Новая игра",
+            "Credits": "Об авторе",
+            "Quit": "Выход",
+            "Wall": "Стена",
+            "Apple": "Яблоко",
+            "Cherry": "Вишенка",
+            "Pacman": "Пэкмэн",
+            "Food": "Пища",
+            "Return": "Обратно",
+            "New round": "Новый раунд",
+            "Width:": "Ширина:",
+            "Height:": "Высота:",
+            "Cherry:": "Вишенки:",
+            "Apples:": "Яблоки:",
+            "Minimal distance:": "Минимальное расстояние:",
+            "Please, wait...": "Пожалуйста, подождите",
+            "Teams": "Команда",
+            "Score": "Фора",
+            "Do shields exists:": "Есть ли в игре щиты:",
+            "Number of teams:": "Кол-во команд:",
+            "Cost of an apple:": "Цена яблока",
+            "End game": "Закончить игру",
+            "Yes": "Да",
+            "No": "Нет",
+            "Empty map": "Пустая карта",
+            "The distance between players is too big for this gamefield.": "Расстояние между игроками слишком большое для этого поля.",
+            "Too many objects for this gamefield.": "Слишком объектов для этого поля.",
+            "Incorrect form number": "Неправильная форма №",
+            "About": "Об авторе"
+        }
+        self.curr = 0 # 1 - English, 0 - Russian . Defines current language mod
+    
+    def change(self, str1): # Changes language
+        if str1 not in self.lang:
+            return False
+        self.curr = self.lang[str1]
+        return True
+
+    def translate(self, str1): # Translates phrase or word to current language 
+        if self.curr == 0: # Russian
+            i = 0
+            str1 = str(str1)
+            while str1[i] == " ":
+                i += 1
+            j = len(str1) - 1
+            cnt = 0
+            while str1[j] == " ":
+                j -= 1
+                cnt += 1
+            str1 = str1[i:j + 1]
+            z = ""
+            if str1 not in self.ru:
+                #print(str1) #ToDo
+                return " " * i + str1 + z + " " * cnt 
+            return " " * i + self.ru[str1] + z + " " * cnt
+        else: # English
+            return str1
 
 def save_game():
     fn = filedialog.SaveAs(root, filetypes = [('*.game files', '.game')]).show()
@@ -459,9 +571,13 @@ def ChangeSettings(arr): #Function for writing in file for communicating with pa
     goto_menu_map_new()
 
 def Error(errorlist): #Simple function to warn user about not valide input
+    for i in range(len(errorlist)):
+        errorlist[i] = str(errorlist[i])
+    app.error.config(text = "\n".join(errorlist))
+    '''
     app.error.delete("1.0", "end")
     for el in errorlist:
-        app.error.insert("-1.0", "Incorrect form number " + str(el) + "\n")
+        app.error.insert("-1.0", lang.translate("Incorrect form number ") + str(el) + "\n")'''
 
 def com(): #Function that read information from setting menu
     global app
@@ -470,6 +586,7 @@ def com(): #Function that read information from setting menu
     spec1 = False #Special error number 1
     spec2 = False #Special error number 2
     #Width
+    s = "Incorrect form number "
     if app.sp[0].get() in  ["3", "6", "9", "12", "15", "18", "21", "24"]:
         arr.append(int(app.sp[0].get()))
     else:
@@ -512,9 +629,11 @@ def com(): #Function that read information from setting menu
             log.append(4)
     except:
         log.append(4)
-
-    if arr[-1] + arr[-2] + arr[-3] > arr[0] * arr[1]:
-        spec2 = True
+    try:
+        if arr[-1] + arr[-2] + arr[-3] > arr[0] * arr[1]:
+            spec2 = True
+    except:
+        pass
 
     #Option for creating map only by user
     if int(app.cb_var.get()) == 1 and "1" not in log and "2" not in log:
@@ -525,11 +644,15 @@ def com(): #Function that read information from setting menu
         return
 
     if log != list() or spec1 or spec2: #There are some mistakes
-        Error(sorted(log))
+        es = []
+        for el in sorted(log):
+            es.append(lang.translate(s) + str(el))
         if spec1:
-            app.error.insert("-1.0", "The distance between players is too big for this gamefield.")
+            es.append(lang.translate("The distance between players is too big for this gamefield."))
         if spec2:
-            app.error.insert("-1.0", "Too many objects for this gamefield.")
+            es.append("-1.0", lang.translate("Too many objects for this gamefield."))
+        Error(sorted(es))
+        
     else:   
         if arr[1] > arr[0]: # Turning gamefield 
             arr[0], arr[1] = arr[1], arr[0]
@@ -650,6 +773,13 @@ def prev_change(): #Function that allows to return to earlier state
     app.canv.HotKeys("<Button-3>", replace3)
     return True
 
+def another_language():
+    bt = app.lang_bt
+    curr = lang.lang_list[(lang.curr + 1) % len(lang.lang)]
+    bt.config(text = curr)
+    lang.change(curr)
+    menu_start()
+
 def PrepareForGame(): #Function that adds teams from team menu
     n = settings.n
     t = [] #list of names of teams
@@ -658,6 +788,7 @@ def PrepareForGame(): #Function that adds teams from team menu
     log = [] # All data is valide
     prev = set() # set of names of teams
     cnt = 0
+    s = "Incorrect form number "
     for el in app.sp:
         if state == 1:
             try:
@@ -672,7 +803,10 @@ def PrepareForGame(): #Function that adds teams from team menu
         cnt += state
         state = (state + 1) % 2
     if log != []:
-        Error(log)
+        es = []
+        for el in log:
+            es.append(lang.translate(s) + str(el))
+        Error(es)
         return
     for i in range(n):
         teams.add_team(t[i], sc[i], teams.colors[i])
@@ -691,7 +825,7 @@ def new_game(): #Function that sets all values to special state to play again an
 
 def goto_menu_map_new():
     app.remove()
-    lb = tkinter.Label(text = "Please, wait.")
+    lb = Label(text = "Please, wait...")
     lb.pack()
     app.add(lb)
     GameCreating(settings.source)
@@ -721,6 +855,7 @@ def DefineTeamsLocation(): #Function that associate team with ceil on gamefield
 
 def goto_menu_teams():
     log = []
+    s = "Incorrect form number "
     try:
         if 2 <= int(app.sp[0].get()) <= 9 :
             settings.n = int(app.sp[0].get())
@@ -734,15 +869,18 @@ def goto_menu_teams():
     except:
         log.append(2)
 
-    if app.sp[2].get() == "Yes":
+    if app.sp[2].get() == lang.translate("Yes"):
         parametres.SHIELD = 0
-    elif app.sp[2].get() == "No":
+    elif app.sp[2].get() == lang.translate("No"):
         parametres.SHIELD = 1
     else:
         log.append(3)
 
     if log != []:
-        Error(log)
+        es = []
+        for el in log:
+            es.append(lang.translate(s) + str(el))
+        Error(es)
     else:
         menu_teams()
 
@@ -756,70 +894,74 @@ def goto_map_from_game(): #Resets map to the normal state
         teams.cords[el] = [-1, -1]
     menu_map()
 
+def goto_game_from_end():
+    for el in teams.nm: 
+        teams.score[el], teams.curr[el] = teams.curr[el] - teams.score[el], teams.curr[el]
+    menu_game()
+
 def menu_settings(): #Menu for defining global gamefield parametres
     standart_menu()
-    fr_nav = tkinter.Frame(app.sw)
+    fr_nav = Frame(app.sw)
     fr_nav.pack()
 
-    lb = tkinter.Label(app.cw, text = "Width: ", font = MyFont)
+    lb = Label(app.cw, text = "Width: ", font = MyFont)
     lb.grid(row = 1, column = 1)
     sc = tkinter.Spinbox(app.cw, values = (3, 6, 9, 12, 15, 18, 21, 24), font = MyFont)
     sc.grid(row = 1, column = 2)
     app.add_sp(sc)
 
-    lb = tkinter.Label(app.cw, text = "Height: ", font = MyFont)
+    lb = Label(app.cw, text = "Height: ", font = MyFont)
     lb.grid(row = 2, column = 1)
     sc = tkinter.Spinbox(app.cw, values = (3, 6, 9, 12, 15, 18, 21, 24), font = MyFont)
     sc.grid(row = 2, column = 2)
     app.add_sp(sc)
 
-    lb = tkinter.Label(app.cw, text = "Cherry: ", font = MyFont)
+    lb = Label(app.cw, text = "Cherry: ", font = MyFont)
     lb.grid(row = 3, column = 1)
     sc = tkinter.Spinbox(app.cw, values = range1(0, 9), font = MyFont)
     sc.grid(row = 3, column = 2)
     app.add_sp(sc)
 
-    lb = tkinter.Label(app.cw, text = "Apples: ", font = MyFont)
+    lb = Label(app.cw, text = "Apples: ", font = MyFont)
     lb.grid(row = 4, column = 1)
     sc = tkinter.Spinbox(app.cw, values = range1(0, 13), font = MyFont)
     sc.grid(row = 4, column = 2)
     app.add_sp(sc)
 
-    lb = tkinter.Label(app.cw, text = "Minimal distance: ", font = MyFont)
+    lb = Label(app.cw, text = "Minimal distance: ", font = MyFont)
     lb.grid(row = 5, column = 1)
     sc = tkinter.Spinbox(app.cw, values = range1(1, 30), font = MyFont)
     sc.grid(row = 5, column = 2)
     app.add_sp(sc)
 
     var = tkinter.IntVar()
-    cb = tkinter.Checkbutton(app.cw, text = "Don`t generate map", variable = var,  onvalue="1", offvalue="0")
+    cb = tkinter.Checkbutton(app.cw, text = lang.translate("Empty map"), variable = var,  onvalue="1", offvalue="0")
     cb.grid(row = 6, column = 1, columnspan = 2)
     app.cb_var = var
 
-    bt = tkinter.Button(fr_nav, text = parametres.SPACES + "Back" + parametres.SPACES, command = menu_teams)
+    bt = Button(fr_nav, text = parametres.SPACES + "Back" + parametres.SPACES, command = menu_teams)
     bt.grid(row = 6, column = 1)
-    bt1 = tkinter.Button(fr_nav, text = parametres.SPACES + "Next" + parametres.SPACES, command = com)
+    bt1 = Button(fr_nav, text = parametres.SPACES + "Next" + parametres.SPACES, command = com)
     bt1.grid(row = 6, column = 2)
 
-    text = tkinter.Text(app.bw, font = MyFont, width = width, height = height)
+    text = Message(app.bw, font = MyFont)#tkinter.Text(app.bw, font = MyFont, width = width, height = height)
     text.grid()
     app.add_es(text)
 
 def menu_credits(): #My menu. Please don`t modify
     app.remove()
-    f1 = tkinter.Frame(root, bg = "blue", width = 600, height = 600)
-    f2 = tkinter.Frame(root, bg = "black")
-    f3 = tkinter.Frame(root, bg = "darkblue")
+    f1 = Frame(root, bg = "blue", width = 600, height = 600)
+    f2 = Frame(root, bg = "black")
+    f3 = Frame(root, bg = "darkblue")
     f1.grid(row = 1, column = 1, columnspan = 2)
     f2.grid(row = 1, column = 3)
     f3.grid(row = 2, column = 1, columnspan = 3)
     c1 = tkinter.Canvas(f1, width = 600, height = 600)
     c1.create_image(250, 300, image = logo)
     c1.pack()
-    t2 = tkinter.Text(f2, font = MyFont, width = width, height = height)
-    t2.insert(END, "Andrew Ishutin is a developer of this program.\nYou can send a message to:\nEmail: hazmozavr@gmail.com\nVk: https://vk.com/aishutin2002")
-    t2.pack()
-    bt3 = tkinter.Button(f3, text = "Back", command = menu_start)
+    message = Message(f2, font = MyFont, text = "Andrew Ishutin is a developer of this program.\nYou can send a message to:\nEmail: hazmozavr@gmail.com\nVk: https://vk.com/aishutin2002")
+    message.pack()
+    bt3 = Button(f3, text = "Back", command = menu_start)
     bt3.pack()
     app.add(f1)
     app.add(f2)
@@ -827,7 +969,7 @@ def menu_credits(): #My menu. Please don`t modify
 
 def menu_map(): #Menu for previewing and changing the map
     standart_menu()
-    c = tkinter.Canvas(app.cw, width = settings.width - 100, height = settings.height - 100, bg = "white")
+    c = tkinter.Canvas(app.cw, width = settings.width - 100, height = settings.height - 100)
     c.pack(expand = YES, fill = BOTH)   
     c.draw_gamefield(app.field)
     c.normalize()
@@ -835,60 +977,60 @@ def menu_map(): #Menu for previewing and changing the map
     app.add_ca(c)
     app.add_fr_of_ca(app.cw)
 
-    fr_nav = tkinter.Frame(app.sw)
+    fr_nav = Frame(app.sw)
     fr_nav.pack()
     s = parametres.SPACES
-    bt = tkinter.Button(fr_nav, text = s + "Back" + s, command = menu_settings)
+    bt = Button(fr_nav, text = s + "Back" + s, command = menu_settings)
     bt.grid(row = 1, column = 1)
-    bt2 = tkinter.Button(app.bw, text = "Wall", command = lambda: app.change_brash("0"))
+    bt2 = Button(app.bw, text = "Wall", command = lambda: app.change_brash("0"))
     bt2.grid(row = 1, column = 2)
-    bt3 = tkinter.Button(app.bw, text = "Food", command = lambda: app.change_brash("."))
+    bt3 = Button(app.bw, text = "Food", command = lambda: app.change_brash("."))
     bt3.grid(row = 1, column = 3)
-    bt4 = tkinter.Button(app.bw, text = "Pacman", command = lambda: app.change_brash("<"))
+    bt4 = Button(app.bw, text = "Pacman", command = lambda: app.change_brash("<"))
     bt4.grid(row = 1, column = 4)
-    bt5 = tkinter.Button(app.bw, text = "Apple", command = lambda: app.change_brash("a"))
+    bt5 = Button(app.bw, text = "Apple", command = lambda: app.change_brash("a"))
     bt5.grid(row = 1, column = 5) 
-    bt6 = tkinter.Button(app.bw, text = "Cherry", command = lambda: app.change_brash("c"))
+    bt6 = Button(app.bw, text = "Cherry", command = lambda: app.change_brash("c"))
     bt6.grid(row = 1, column = 6)
-    bt7 = tkinter.Button(fr_nav, text = s + "Next" + s, command = goto_menu_game)
+    bt7 = Button(fr_nav, text = s + "Next" + s, command = goto_menu_game)
     bt7.grid(row = 1, column = 2)
-    bt8 = tkinter.Button(fr_nav, text = s + "Load" + s, command = menu_continue_map)
+    bt8 = Button(fr_nav, text = s + "Load" + s, command = menu_continue_map)
     bt8.grid(row = 2, column = 1)
-    bt9 = tkinter.Button(fr_nav, text = s + "Save" + s, command = save_file)
+    bt9 = Button(fr_nav, text = s + "Save" + s, command = save_file)
     bt9.grid(row = 2, column = 2)
 
 def menu_end(): #Menu for representing information in the end of the session
     standart_menu()   
     for el in teams.nm:
-        teams.curr[el] += teams.score[el] + teams.apple[el]
-        teams.score[el] = 0
-        teams.apple[el] = 0
+        teams.curr[el], teams.score[el] = teams.curr[el] + teams.score[el], teams.curr[el]
     sc = score_table(app.cw)
     sc.pack()
 
-    fr_nav = tkinter.Frame(app.sw)
+    fr_nav = Frame(app.sw)
     fr_nav.pack()
 
-    Bt = tkinter.Button(fr_nav, text = parametres.SPACES + "Quit" + parametres.SPACES, command = menu_start)
+    Bt0 = Button(fr_nav, text = parametres.SPACES + "Back" + parametres.SPACES, command = goto_game_from_end)
+    Bt0.grid(row = 1, column = 3)
+    Bt = Button(fr_nav, text = parametres.SPACES + "Quit" + parametres.SPACES, command = menu_start)
     Bt.grid(row = 1, column = 1)
-    Bt1 = tkinter.Button(fr_nav, text = parametres.SPACES + "Save" + parametres.SPACES, command = save_game)
+    Bt1 = Button(fr_nav, text = parametres.SPACES + "Save" + parametres.SPACES, command = save_game)
     Bt1.grid(row = 1, column = 2)
 
 def menu_game(): #Menu for playing
     standart_menu()
-    c = tkinter.Canvas(app.cw, bg = "white")
+    c = tkinter.Canvas(app.cw)
     c.pack(expand = YES, fill = BOTH)
     c.draw_gamefield(app.field)
     c.normalize()
     app.add_fr_of_ca(app.cw)
     app.add_ca(c)
-    bt1 = tkinter.Button(app.bw, text = "Back", command = goto_map_from_game)
-    bt2 = tkinter.Button(app.bw, text = "Quit", command = menu_end)
+    bt1 = Button(app.bw, text = "Back", command = goto_map_from_game)
+    bt2 = Button(app.bw, text = "End game", command = menu_end)
     bt1.grid(row = 1, column = 1)
     bt2.grid(row = 1, column = 5)
-    bt = tkinter.Button(app.bw, text = "New round", command = new_game)
+    bt = Button(app.bw, text = "New round", command = new_game)
     bt.grid(row = 1, column = 4)
-    bt3 = tkinter.Button(app.bw, text = "Return", command = prev_change)
+    bt3 = Button(app.bw, text = "Return", command = prev_change)
     bt3.grid(row = 1, column = 3)
     st = score_table(app.sw)
     st.pack()
@@ -899,51 +1041,50 @@ def menu_game(): #Menu for playing
 
 def menu_new_party(): #Menu for creating ew session
     standart_menu()
-    font.nametofont('TkDefaultFont').configure(size=20)
+    font.nametofont('TkDefaultFont').configure(size = 20)
     teams.reset()
-    fr_set = tkinter.Frame(app.cw) #A frame for settings 
-    fr_nav = tkinter.Frame(app.sw) #A frame for navigation buttons
+    fr_set = Frame(app.cw) #A frame for settings 
+    fr_nav = Frame(app.sw) #A frame for navigation buttons
     fr_set.pack()
     fr_nav.pack()
 
-    lb = tkinter.Label(fr_set, text = "Enter number of teams: ")
+    lb = Label(fr_set, text = "Number of teams: ")
     lb.grid(row = 1, column = 1, columnspan = 1)
     sc = tkinter.Spinbox(fr_set, values = range1(2, 9), font = MyFont)
     sc.grid(row = 1, column = 2, columnspan = 1)
     app.add_sp(sc)
-    
-    lb = tkinter.Label(fr_set, text = "Cost of an apple: ")
+    lb = Label(fr_set, text = "Cost of an apple: ")
     lb.grid(row = 2, column = 1, columnspan = 1)
     en = tkinter.Entry(fr_set, font = MyFont)
     en.insert(0, str(settings.apple))
     en.grid(row = 2, column = 2)
     app.add_sp(en)
 
-    lb = tkinter.Label(fr_set, text = "Is it possible to be killed two times in a row:")
+    lb = Label(fr_set, text = "Do shields exists:")
     lb.grid(row = 3, column = 1, columnspan = 1)
-    sp = tkinter.Spinbox(fr_set, values = ("Yes", "No"), font = MyFont)
+    sp = tkinter.Spinbox(fr_set, values = (lang.translate("Yes"), lang.translate("No")), font = MyFont)
     sp.grid(row = 3, column = 2)
     app.add_sp(sp)
 
-    bt0 = tkinter.Button(fr_nav, text = parametres.SPACES + "Back" + parametres.SPACES, command = menu_start)
+    bt0 = Button(fr_nav, text = parametres.SPACES + "Back" + parametres.SPACES, command = menu_start)
     bt0.grid(row = 5, column = 1)
-    bt = tkinter.Button(fr_nav, text = parametres.SPACES + "Next" + parametres.SPACES, command = goto_menu_teams)
+    bt = Button(fr_nav, text = parametres.SPACES + "Next" + parametres.SPACES, command = goto_menu_teams)
     bt.grid(row = 5, column = 2)
 
-    er = tkinter.Text(app.bw, font = MyFont, width = width, height = height)
+    er = Message(app.bw, font = MyFont)
     er.grid(row = 6, column = 1, columnspan = 2)
     app.add_es(er)
 
 def standart_menu(): #Standart menu template
     app.remove()
-    fr_main = tkinter.Frame()
+    fr_main = Frame()
     fr_main.pack(fill = BOTH, expand = 1)
     app.add(fr_main)
-    fr_side = tkinter.Frame(fr_main)
+    fr_side = Frame(fr_main)
     fr_side.grid(row = 1, column = 2, rowspan = 2)
-    fr_central = tkinter.Frame(fr_main)
+    fr_central = Frame(fr_main)
     fr_central.grid(row = 1, column = 1)
-    fr_bottom = tkinter.Frame(fr_main)
+    fr_bottom = Frame(fr_main)
     fr_bottom.grid(row = 2, column = 1)
     ad = ad_vid(fr_side)
     ad.pack()
@@ -969,36 +1110,42 @@ def menu_teams(): #Menu for creating teams
         lb1.insert(0, "0")
         lb1.grid(row = i + 2, column = 3)
         app.add_sp(lb1) 
-    fr_nav = tkinter.Frame(app.sw)
+    fr_nav = Frame(app.sw)
     fr_nav.pack()
-    bt = tkinter.Button(fr_nav, text = parametres.SPACES + "Back" + parametres.SPACES, command = menu_new_party)
+    bt = Button(fr_nav, text = parametres.SPACES + "Back" + parametres.SPACES, command = menu_new_party)
     bt.grid(row = n + 3, column = 1)
-    bt2 = tkinter.Button(fr_nav, text = parametres.SPACES + "Next" + parametres.SPACES, command = PrepareForGame)
+    bt2 = Button(fr_nav, text = parametres.SPACES + "Next" + parametres.SPACES, command = PrepareForGame)
     bt2.grid(row = n + 3, column = 3)
-    text = tkinter.Text(app.bw, font = MyFont, width = width, height = height)
+    text = Message(app.bw, font = MyFont)
+    #    tkinter.Text width = width, height = height)
     text.grid(row = n + 4, column = 3)
     app.add_es(text)
 
 def menu_start(): #Start menu
     app.remove()
     font.nametofont('TkDefaultFont').configure(size = 30)
-    fr_main = tkinter.Frame(bg = "pink")
+    fr_main = Frame(bg = "pink")
     fr_main.pack()
     app.add(fr_main)
     fr = fr_main
-    bt = tkinter.Button(fr, text = "New game", command = menu_new_party, width = 20, height = 2)
+    w1 = 15 #width of buttons
+    h1 = 1  #height of buttons 
+    bt = Button(fr, text = "New game", command = menu_new_party, width = w1, height = h1)
     bt.pack()
-    bt2 = tkinter.Button(fr, text = "Continue", command = load_game, width = 20, height = 2)
+    bt2 = Button(fr, text = "Continue", command = load_game, width = w1, height = h1)
     bt2.pack()
-    bt3 = tkinter.Button(fr, text = "Credits", command = menu_credits, width = 20, height = 2)
+    bt3 = Button(fr, text = "About", command = menu_credits, width = w1, height = h1)
     bt3.pack()
-    bt1 = tkinter.Button(fr, text = "Quit", command = Quit, width = 20, height = 2)
+    bt4 = Button(fr, text = lang.lang_list[lang.curr], command = another_language, width = w1, height = h1)
+    bt4.pack()
+    app.lang_bt = bt4
+    bt1 = Button(fr, text = "Quit", command = Quit, width = w1, height = h1)
     bt1.pack()
 
 teams = team_data() #Storage for information about teams
 source = "fields.sv"
 #settings = prec(1366 - 15, 768 - 40, "3.5", source, 5) #GetSystemMetrics(0) - 15, GetSystemMetrics(1) - 40,
-settings = prec(GetSystemMetrics(0) - 15, GetSystemMetrics(1) - 40, "3.5", source, 5) #
+settings = prec(GetSystemMetrics(0) - 15, GetSystemMetrics(1) - 40, "3.6 alpha", source, 5) #
 archive = hist()
 #^Storage for const information^
 width = 52
@@ -1018,6 +1165,7 @@ theme = tkinter.PhotoImage(file = "Small Krechet.png")
 root.title("Pacman v" + str(settings.version))
 root.geometry(str(settings.width) + 'x' + str(settings.height))
 parametres = param(0, 0, "         ")
+lang = language()
 font.nametofont('TkDefaultFont').configure(size = 30)
 MyFont = font.Font(weight='bold', size = 20)
 menu_start()
