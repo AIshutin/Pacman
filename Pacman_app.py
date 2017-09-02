@@ -6,6 +6,7 @@ from win32api import GetSystemMetrics #For screen resolution
 from time import*
 from random import*
 import subprocess #For Batch scripts
+import sys
 
 '''
 AIs Software
@@ -97,7 +98,7 @@ def _draw_gamefield(self, curr):
     h = len(curr)
     w = len(curr[0])
     w_r = (settings.width - 500) // w
-    h_r = (settings.height - 100)// h
+    h_r = (settings.height - 200)// h
     d = min(w_r, h_r)
     app.d = d
     for i in range(h):
@@ -139,8 +140,10 @@ tkinter.Entry.insert = _insert
 
 #Shortcuts&more
 def Button(root = None, **keyargs): # Function for fast creating buttons with custom parametres for fast modifing
-    z = tkinter.Button(root, **keyargs)
+    z = tkinter.Button(root, **keyargs, activebackground = COLOR_CLICK, bg = COLOR_DISABLED)
     app.add(z)
+    if "text" not in keyargs:
+        return z
     z.config(text = lang.translate(z.config()["text"][-1]))
     return z
 
@@ -173,6 +176,16 @@ def Message(root = None, **keyargs):
         z.config(text = lang.translate(text))
     else:
         z.config(text = "")
+    app.add(z)
+    return z
+
+'''def MakeActive(bt):
+    bt.config(bg = "blue")'''
+
+def Radiobutton(root = None, **keyargs):
+    z = tkinter.Radiobutton(root, **keyargs, activebackground = COLOR_HOVER, selectcolor = COLOR_CLICK, indicatoron = 0, bg = COLOR_DISABLED)
+    z.config(text = lang.translate(z.config()["text"][-1]))
+    #z.config(command = lambda: MakeActive(z)) 
     app.add(z)
     return z
 
@@ -243,15 +256,15 @@ class ad_vid: #Not for moding, please. #A vidget for my ad
     
     def __init__(self, root, **keyargs):
         self.fr = Frame(root, **keyargs)
-        self.canv = Canvas(self.fr)
-        self.text = tkinter.Message(self.fr, text = "AI`s Software\n", width = 2002)
+        #self.canv = Canvas(self.fr)
+        #self.text = tkinter.Message(self.fr, text = "AI`s Software\n", width = 2002)
 
     def pack(self, **keyargs):
         self.fr.pack(**keyargs)
-        self.canv.pack()
-        self.canv.create_image(0, 0, image = theme, anchor = "nw")
-        self.canv.normalize()
-        self.text.pack()
+        #self.canv.pack()
+        #self.canv.create_image(0, 0, image = theme, anchor = "nw")
+        #self.canv.normalize()
+        #self.text.pack()
 
     def destroy(self):
         destroy(self.fr)
@@ -503,9 +516,24 @@ def CPacman(): #Function for working with C++ Pacman.exe with Batch commands
     PIPE = subprocess.PIPE
     p = subprocess.Popen(cmd, shell=True, stderr=subprocess.STDOUT)
     z = clock()
+    tin = z
     while clock() - z < 2:
         root.update()
+        if clock() - tin > 1:
+            tin = clock()
+            app.loader_text = change_loader(app.loader_text)
+            app.loader.config(text = app.loader_text)
+
+
+    tin = clock()
     while True:
+        #print(clock(), tin)
+        #sleep(0.5)
+        if clock() - tin > 1:
+            #print(2)
+            tin = clock()
+            app.loader_text = change_loader(app.loader_text)
+            app.loader.config(text = app.loader_text)
         try:
             root.update()
             z = open("sys")
@@ -514,7 +542,7 @@ def CPacman(): #Function for working with C++ Pacman.exe with Batch commands
                 break
             z.close()
         except:
-            sleep(1)
+            #sleep(1)
             break
 
 def CreateGameField(source): #Function for reading gamefield from file
@@ -561,6 +589,7 @@ def Quit(): #Quit with killing 3 working pacman.exe
     cmd = 'cleaner.bat'
     PIPE = subprocess.PIPE
     p = subprocess.Popen(cmd, shell=True)
+    setts.save()
     exit(0)
 
 def ChangeSettings(arr): #Function for writing in file for communicating with pacman.exe 
@@ -568,7 +597,7 @@ def ChangeSettings(arr): #Function for writing in file for communicating with pa
     for el in arr + ["<", "0", "a", "c", ".", "fields.sv"]:
         print(el, file = fout)
     fout.close()
-    goto_menu_map_new()
+    #goto_menu_map_new()
 
 def Error(errorlist): #Simple function to warn user about not valide input
     for i in range(len(errorlist)):
@@ -808,8 +837,11 @@ def PrepareForGame(): #Function that adds teams from team menu
             es.append(lang.translate(s) + str(el))
         Error(es)
         return
+    global teams
+    teams = team_data()
     for i in range(n):
         teams.add_team(t[i], sc[i], teams.colors[i])
+    setts.teams = deepcopy(teams)
     menu_settings()
 
 def new_game(): #Function that sets all values to special state to play again and save current achievments
@@ -825,11 +857,19 @@ def new_game(): #Function that sets all values to special state to play again an
 
 def goto_menu_map_new():
     app.remove()
+    fr = Frame(height = 200)
+    fr.pack()
     lb = Label(text = "Please, wait...")
     lb.pack()
+    lb1 = Label(text = "^")
+    lb1.pack()
+    app.loader = lb1
+    app.loader_text = "^"
+    app.add(lb1)
     app.add(lb)
     GameCreating(settings.source)
     lb.destroy()
+    lb1.destroy()
     menu_map()
 
 def goto_menu_game():
@@ -854,11 +894,13 @@ def DefineTeamsLocation(): #Function that associate team with ceil on gamefield
                 prev += 1
 
 def goto_menu_teams():
-    log = []
+    global app
+    log = [] #User`s mistakes
     s = "Incorrect form number "
     try:
         if 2 <= int(app.sp[0].get()) <= 9 :
             settings.n = int(app.sp[0].get())
+            setts.field["n"] = settings.n
         else:
             log = [1]
     except:
@@ -866,22 +908,102 @@ def goto_menu_teams():
     
     try:
         settings.apple = int(app.sp[1].get())
+        setts.field["apple_cost"] = settings.apple
     except:
         log.append(2)
 
-    if app.sp[2].get() == lang.translate("Yes"):
+    #print(app.rb)
+    if app.rb.get() == 1:
         parametres.SHIELD = 0
-    elif app.sp[2].get() == lang.translate("No"):
+    else:
         parametres.SHIELD = 1
-    else:
-        log.append(3)
 
-    if log != []:
-        es = []
-        for el in log:
-            es.append(lang.translate(s) + str(el))
-        Error(es)
+    arr = [] #Good information from user
+    spec1 = False #Special error number 1
+    spec2 = False #Special error number 2
+    #Width
+    s = "Incorrect form number "
+    if app.sp[3].get() in  ["3", "6", "9", "12", "15", "18", "21", "24"]:
+        arr.append(int(app.sp[3].get()))
+        setts.field["width"] = arr[-1]
     else:
+        log.append(4)
+
+    #Height
+    if app.sp[4].get() in  ["3", "6", "9", "12", "15", "18", "21", "24"]:
+        arr.append(int(app.sp[4].get()))
+        setts.field["height"] = arr[-1]
+    else:
+        log.append(5)
+
+    #Minimal distance between player and player
+    try:
+        if 1 <= int(app.sp[-1].get()) <= 30:
+            arr.append(int(app.sp[-1].get()))
+            if ((arr[0] - 1) // arr[2] + 1) * ((arr[1] - 1) // arr[2] + 1) < settings.n:
+                spec1 = True
+            if not spec1: 
+                setts.field["min dist"] = arr[-1]
+        else:
+            log.append(8)
+    except:
+        log.append(8)
+
+    #Adding number of players
+    arr.append(settings.n)
+
+    #Cherry
+    try:    
+        print(app.sp[5].get())
+        if 0 <= int(app.sp[5].get()) <= 9 :
+            arr.append(int(app.sp[5].get()))
+            setts.field["cherry"] = arr[-1]
+        else:
+            print("Wrong cherry 1")
+            log.append(6)
+    except:
+        log.append(6)
+        print("Wrong cherry 2")
+
+    #Apple
+    try:  
+        if 0 <= int(app.sp[6].get()) <= 9 :
+            arr.append(int(app.sp[6].get()))
+            setts.field["apple"] = arr[-1]
+        else:
+            log.append(7)
+    except:
+        log.append(7)
+    try:
+        if arr[-1] + arr[-2] + arr[-3] > arr[0] * arr[1]:
+            spec2 = True
+    except:
+        pass
+    #Option for creating map only by user
+    if int(app.cb_var.get()) == 1 and "1" not in log and "2" not in log:
+        if arr[1] > arr[0]: # Turning gamefield 
+            arr[0], arr[1] = arr[1], arr[0]
+        app.field = ["0" * int(arr[0]) for i in range(int(arr[1]))]
+        #        menu_map()
+        menu_teams()
+        return
+
+    if log != list() or spec1 or spec2: #There are some mistakes
+        es = []
+        for el in sorted(log):
+            es.append(lang.translate(s) + str(el))
+        if spec1:
+            es.append(lang.translate("The distance between players is too big for this gamefield."))
+        if spec2:
+            es.append(lang.translate("Too many objects for this gamefield."))
+        Error(sorted(es))
+        
+    else:   
+        if arr[1] > arr[0]: # Turning gamefield 
+            arr[0], arr[1] = arr[1], arr[0]
+        ChangeSettings(arr)
+        global teams
+        teams = deepcopy(setts.teams)
         menu_teams()
 
 def goto_map_from_game(): #Resets map to the normal state
@@ -900,53 +1022,11 @@ def goto_game_from_end():
     menu_game()
 
 def menu_settings(): #Menu for defining global gamefield parametres
-    standart_menu()
-    fr_nav = Frame(app.sw)
-    fr_nav.pack()
-
-    lb = Label(app.cw, text = "Width: ", font = MyFont)
-    lb.grid(row = 1, column = 1)
-    sc = tkinter.Spinbox(app.cw, values = (3, 6, 9, 12, 15, 18, 21, 24), font = MyFont)
-    sc.grid(row = 1, column = 2)
-    app.add_sp(sc)
-
-    lb = Label(app.cw, text = "Height: ", font = MyFont)
-    lb.grid(row = 2, column = 1)
-    sc = tkinter.Spinbox(app.cw, values = (3, 6, 9, 12, 15, 18, 21, 24), font = MyFont)
-    sc.grid(row = 2, column = 2)
-    app.add_sp(sc)
-
-    lb = Label(app.cw, text = "Cherry: ", font = MyFont)
-    lb.grid(row = 3, column = 1)
-    sc = tkinter.Spinbox(app.cw, values = range1(0, 9), font = MyFont)
-    sc.grid(row = 3, column = 2)
-    app.add_sp(sc)
-
-    lb = Label(app.cw, text = "Apples: ", font = MyFont)
-    lb.grid(row = 4, column = 1)
-    sc = tkinter.Spinbox(app.cw, values = range1(0, 13), font = MyFont)
-    sc.grid(row = 4, column = 2)
-    app.add_sp(sc)
-
-    lb = Label(app.cw, text = "Minimal distance: ", font = MyFont)
-    lb.grid(row = 5, column = 1)
-    sc = tkinter.Spinbox(app.cw, values = range1(1, 30), font = MyFont)
-    sc.grid(row = 5, column = 2)
-    app.add_sp(sc)
-
-    var = tkinter.IntVar()
-    cb = tkinter.Checkbutton(app.cw, text = lang.translate("Empty map"), variable = var,  onvalue="1", offvalue="0")
-    cb.grid(row = 6, column = 1, columnspan = 2)
-    app.cb_var = var
-
-    bt = Button(fr_nav, text = parametres.SPACES + "Back" + parametres.SPACES, command = menu_teams)
-    bt.grid(row = 6, column = 1)
-    bt1 = Button(fr_nav, text = parametres.SPACES + "Next" + parametres.SPACES, command = com)
-    bt1.grid(row = 6, column = 2)
-
-    text = Message(app.bw, font = MyFont)#tkinter.Text(app.bw, font = MyFont, width = width, height = height)
-    text.grid()
-    app.add_es(text)
+    #print(setts.field["empty"], setts.field["empty"].get())
+    if setts.field["empty"].get() == 1:
+        menu_map()
+    else:
+        goto_menu_map_new()
 
 def menu_credits(): #My menu. Please don`t modify
     app.remove()
@@ -959,7 +1039,7 @@ def menu_credits(): #My menu. Please don`t modify
     c1 = tkinter.Canvas(f1, width = 600, height = 600)
     c1.create_image(250, 300, image = logo)
     c1.pack()
-    message = Message(f2, font = MyFont, text = "Andrew Ishutin is a developer of this program.\nYou can send a message to:\nEmail: hazmozavr@gmail.com\nVk: https://vk.com/aishutin2002")
+    message = Message(f2, font = MyFont, width = 700, text = "AIs Software\nAndrew Ishutin is a developer of this program.\nYou can send a message to:\nEmail: hazmozavr@gmail.com\nVk: https://vk.com/aishutin2002")
     message.pack()
     bt3 = Button(f3, text = "Back", command = menu_start)
     bt3.pack()
@@ -969,7 +1049,7 @@ def menu_credits(): #My menu. Please don`t modify
 
 def menu_map(): #Menu for previewing and changing the map
     standart_menu()
-    c = tkinter.Canvas(app.cw, width = settings.width - 100, height = settings.height - 100)
+    c = tkinter.Canvas(app.cw, width = settings.width - 100, height = settings.height - 200)
     c.pack(expand = YES, fill = BOTH)   
     c.draw_gamefield(app.field)
     c.normalize()
@@ -980,8 +1060,7 @@ def menu_map(): #Menu for previewing and changing the map
     fr_nav = Frame(app.sw)
     fr_nav.pack()
     s = parametres.SPACES
-    bt = Button(fr_nav, text = s + "Back" + s, command = menu_settings)
-    bt.grid(row = 1, column = 1)
+    
     bt2 = Button(app.bw, text = "Wall", command = lambda: app.change_brash("0"))
     bt2.grid(row = 1, column = 2)
     bt3 = Button(app.bw, text = "Food", command = lambda: app.change_brash("."))
@@ -992,21 +1071,27 @@ def menu_map(): #Menu for previewing and changing the map
     bt5.grid(row = 1, column = 5) 
     bt6 = Button(app.bw, text = "Cherry", command = lambda: app.change_brash("c"))
     bt6.grid(row = 1, column = 6)
-    bt7 = Button(fr_nav, text = s + "Next" + s, command = goto_menu_game)
-    bt7.grid(row = 1, column = 2)
-    bt8 = Button(fr_nav, text = s + "Load" + s, command = menu_continue_map)
-    bt8.grid(row = 2, column = 1)
-    bt9 = Button(fr_nav, text = s + "Save" + s, command = save_file)
-    bt9.grid(row = 2, column = 2)
+    Fr = Frame(app.bw)
+    Fr.grid(row = 2, column = 2, columnspan = 5)
+    bt = Button(Fr, text = "Back", command = menu_teams)
+    bt.grid(row = 2, column = 2)
+    bt7 = Button(Fr, text = "Next", command = goto_menu_game)
+    bt7.grid(row = 2, column = 3)
+    bt8 = Button(Fr, text = "Load", command = menu_continue_map)
+    bt8.grid(row = 2, column = 4)
+    bt9 = Button(Fr, text = "Save", command = save_file)
+    bt9.grid(row = 2, column = 5)
 
 def menu_end(): #Menu for representing information in the end of the session
     standart_menu()   
     for el in teams.nm:
         teams.curr[el], teams.score[el] = teams.curr[el] + teams.score[el], teams.curr[el]
+    fr = Frame(app.cw, height = 130)
+    fr.pack()
     sc = score_table(app.cw)
     sc.pack()
 
-    fr_nav = Frame(app.sw)
+    fr_nav = Frame(app.cw)
     fr_nav.pack()
 
     Bt0 = Button(fr_nav, text = parametres.SPACES + "Back" + parametres.SPACES, command = goto_game_from_end)
@@ -1039,46 +1124,244 @@ def menu_game(): #Menu for playing
     c.HotKeys("<Button-1>", replace2)
     c.HotKeys("<Button-3>", replace3)
 
-def menu_new_party(): #Menu for creating ew session
-    standart_menu()
+def load_settings():
+    fin = open("default.st")
+    rl = fin.readlines()
+    fin.close()
+    #new_party = rl[0]
+    #print(rl[0])
+    #teams = rl[1]
+    #print(rl[1])
+    return rl
+
+def save_settings_party(sets):
+    prev = load_settings()
+    fout = open("default.st", "w")
+    print(sets, file = fout)
+    try:   
+        print(prev[1], file = fout)
+    except:
+        print("{}", file = fout)
+
+class default_settings():
+    def __init__(self):
+        fin = open("setts.st")
+        self.teams = team_data()
+        i = 0
+        for el in eval(fin.readline().rstrip()):
+            self.teams.add_team(el[0], el[1], teams.colors[i])
+            i += 1
+        base = fin.readline().rstrip()[1:-1]
+        self.field = dict()
+        for el in base.split(", "):
+            k, v = el.split(": ")
+            k = k[1:-1]
+            if v[0] == "<":
+                v = tkinter.IntVar()
+            elif v[0] == "'":
+                v = v[1:-1]
+            self.field[k] = v    
+        #print(base)
+        '''
+        self.field["n"] = settings.n
+        self.field["apple_cost"] = settings.apple
+        self.field["shield"] = tkinter.IntVar()
+        self.field["width"] = 9
+        self.field["height"] = 9
+        self.field["cherry"] = 0
+        self.field["apple"] = 0
+        self.field["min dist"] = 5
+        self.field["empty"] = tkinter.IntVar()'''
+        settings.n = int(self.field["n"])
+        settings.apple = int(self.field["apple_cost"])
+
+
+    def update(self, value, type_ = "field", param = "apple"):
+        if type_ == "field":
+            self.field[param] = value
+        else:
+            self.teams[param] = value
+
+    def get(self, type_ = "field", param = "apple"):
+        if type_ == "field":
+            try:
+                #print("*", self.field[param], self.field[param].get())
+                #print("line 1147:", self.field[param], self.field[param].get())
+                return self.field[param]
+            except:
+                print("Error is cought on line 1134.")
+        else:
+            try:
+                return self.teams[param]
+            except:
+                print("Error is cought on line 1139.")
+
+    def save(self):
+        fout = open("setts.st", "w")
+        tms = []
+        for el in self.teams.nm:
+            tms.append([el, self.teams.score[el]])
+        print(tms, file = fout)
+        print(self.field, file = fout)
+        fout.close()
+
+def _update_value(self, **keyargs):
+    self.delete(0, "end")
+    #print("&", keyargs)
+    #print("!", setts.get(**keyargs))
+    #print("#", setts.get(type_ = "field", param = "n"))   #print("#", setts.get(**keyargs).get())
+    self.insert(0, str(setts.get(**keyargs)))
+tkinter.Spinbox.update_value = _update_value
+tkinter.Entry.update_value = _update_value
+
+def range13(start, end):
+    ans = []
+    for i in range(start, end + 1):
+        ans.append(str(i))
+    return ans
+
+def menu_new_party(): #Menu for creating new session
+    app.remove()
+    main = Frame()
+    main.pack()#fill = BOTH, expand = 1
     font.nametofont('TkDefaultFont').configure(size = 20)
     teams.reset()
-    fr_set = Frame(app.cw) #A frame for settings 
-    fr_nav = Frame(app.sw) #A frame for navigation buttons
-    fr_set.pack()
-    fr_nav.pack()
+    fr_set = Frame(main) #A frame for settings 
+    #fr_nav = Frame(app.sw) #A frame for navigation buttons
+    fr_set.pack()#fill = BOTH, expand = 1
+    errors = Frame(main)
+    errors.pack()#fill = BOTH, expand = 1
+    #fr_nav.pack()
 
-    lb = Label(fr_set, text = "Number of teams: ")
-    lb.grid(row = 1, column = 1, columnspan = 1)
-    sc = tkinter.Spinbox(fr_set, values = range1(2, 9), font = MyFont)
-    sc.grid(row = 1, column = 2, columnspan = 1)
+    empty = Frame(fr_set, height = 50)
+    empty.grid(row = 1)
+
+    Fr1 = Frame(fr_set)
+    Fr1.grid(row = 2, column = 1, columnspan = 3)
+    lb = Label(Fr1, text = "Preferences", font = MyFont)
+    lb.pack()
+    pref = Frame(fr_set)
+    pref.grid(row = 3, column = 1, columnspan = 3)
+    lb = Label(pref, text = "Number of teams: ")
+    lb.grid(row = 1, column = 1, columnspan = 2)
+    sc = tkinter.Spinbox(pref, values = range1(2, 9), font = MyFont, width = 7)#, textvariable = setts.field["n"])
+    sc.grid(row = 1, column = 3, columnspan = 1)
+    sc.update_value(type_ = "field", param = "n")
     app.add_sp(sc)
-    lb = Label(fr_set, text = "Cost of an apple: ")
+
+    lb = Label(pref, text = "Cost of an apple: ")
     lb.grid(row = 2, column = 1, columnspan = 1)
-    en = tkinter.Entry(fr_set, font = MyFont)
+    en = tkinter.Entry(pref, font = MyFont, width = 8)#, #textvariable = setts.field["apple_cost"])
+    en.delete(0, "end")
     en.insert(0, str(settings.apple))
-    en.grid(row = 2, column = 2)
+    en.grid(row = 2, column = 3)
     app.add_sp(en)
+    en.update_value(type_ = "field", param = "apple_cost")
 
-    lb = Label(fr_set, text = "Do shields exists:")
-    lb.grid(row = 3, column = 1, columnspan = 1)
-    sp = tkinter.Spinbox(fr_set, values = (lang.translate("Yes"), lang.translate("No")), font = MyFont)
-    sp.grid(row = 3, column = 2)
-    app.add_sp(sp)
+    lb = Label(pref, text = "Do shields exists:")
+    lb.grid(row = 3, column = 1)
+    
+    fr_radio = Frame(pref)
+    fr_radio.grid(row = 3, column = 2, columnspan = 2)
 
-    bt0 = Button(fr_nav, text = parametres.SPACES + "Back" + parametres.SPACES, command = menu_start)
-    bt0.grid(row = 5, column = 1)
-    bt = Button(fr_nav, text = parametres.SPACES + "Next" + parametres.SPACES, command = goto_menu_teams)
-    bt.grid(row = 5, column = 2)
+    rb1 = Radiobutton(fr_radio, text = lang.translate("No"), variable = setts.field["shield"], value = 0, font = MyFont, width = 3)
+    rb2 = Radiobutton(fr_radio, text = lang.translate("Yes"), variable =  setts.field["shield"], value = 1, font = MyFont, width = 3)    
+    rb1.grid(row = 3, column = 3)
+    rb2.grid(row = 3, column = 2)
+    app.rb = setts.field["shield"]
+    app.add_sp(-1) #dont shrink 
 
-    er = Message(app.bw, font = MyFont)
-    er.grid(row = 6, column = 1, columnspan = 2)
+    bt0 = Button(fr_set, text = parametres.SPACES + "Back" + parametres.SPACES, command = menu_start)
+    bt0.grid(row = 80, column = 1)
+    bt = Button(fr_set, text = parametres.SPACES + "Next" + parametres.SPACES, command = goto_menu_teams)
+    bt.grid(row = 80, column = 2)
+
+    er = Message(errors, font = MyFont)
+    er.grid(row = 100, column = 1, columnspan = 3)
     app.add_es(er)
+
+    empty = Frame(fr_set, height = 20)
+    empty.grid(row = 6)
+
+    Fr1 = Frame(fr_set)
+    Fr1.grid(row = 7, column = 1, columnspan = 3)
+    lb = Label(Fr1, text = "Map changing", font = MyFont)
+    lb.pack()
+
+
+    mp = Frame(fr_set)
+    mp.grid(row = 8, columnspan = 3)
+
+    layer = Frame(mp)
+    layer.grid(row = 1, column = 1, columnspan = 3)
+
+    layer2 = Frame(mp)
+    layer2.grid(row = 2, column = 1, columnspan = 3)
+
+    lb = Label(layer, text = "Width: ")
+    lb.grid(row = 7, column = 1, columnspan = 1)
+    sc = tkinter.Spinbox(layer, values = (3, 6, 9, 12, 15, 18, 21, 24), font = MyFont2, width = 3)#, textvariable = setts.field["width"])
+    sc.grid(row = 7, column = 2)
+    app.add_sp(sc)
+    sc.update_value(type_ = "field", param = "width")
+
+
+    space = 20
+
+    empty = Frame(layer, width = space, height = space)
+    empty.grid(row = 7, column = 3)
+
+    lb = Label(layer, text = "Height: ")
+    lb.grid(row = 7, column = 4, columnspan = 1)
+    sc = tkinter.Spinbox(layer, values = (3, 6, 9, 12, 15, 18, 21, 24), font = MyFont2, width = 3)#, textvariable = setts.field["height"])
+    sc.grid(row = 7, column = 5)
+    app.add_sp(sc)
+    sc.update_value(type_ = "field", param = "height")
+
+
+
+    lb = Label(layer2, text = "Cherry: ")
+    lb.grid(row = 1, column = 1)
+    sc = tkinter.Spinbox(layer2, values = range1(0, 9), font = MyFont2, width = 3)#, textvariable = setts.field["cherry"])
+    sc.grid(row = 1, column = 2)
+    app.add_sp(sc)
+    sc.update_value(type_ = "field", param = "cherry")
+
+    empty = Frame(layer2, width = space)
+    empty.grid(row = 1, column = 3)
+
+
+    lb = Label(layer2, text = "Apples: ")
+    lb.grid(row = 1, column = 4)
+    sc = tkinter.Spinbox(layer2, values = range1(0, 13), font = MyFont2, width = 3)#, textvariable = setts.field["apple"])
+    sc.grid(row = 1, column = 5)
+    app.add_sp(sc)
+    sc.update_value(type_ = "field", param = "apple")
+
+    empty = Frame(layer2, width = space)
+    empty.grid(row = 1, column = 6)
+
+    lb = Label(layer2, text = "Minimal distance: ")
+    lb.grid(row = 1, column = 7)
+    sc = tkinter.Spinbox(layer2, values = range1(1, 30), font = MyFont2, width = 3)#, textvariable = setts.field["min dist"])
+    sc.grid(row = 1, column = 8)
+    app.add_sp(sc)
+    sc.update_value(type_ = "field", param = "min dist")
+
+    #var = tkinter.IntVar()
+    cb = tkinter.Checkbutton(fr_set, text = lang.translate("Empty map"), variable = setts.field["empty"],  onvalue="1", offvalue="0")
+    cb.grid(row = 12, column = 1, columnspan = 3)
+    app.cb_var = setts.field["empty"]
+
+    '''text = Message(app.bw, font = MyFont)#tkinter.Text(app.bw, font = MyFont, width = width, height = height)
+    text.grid()
+    app.add_es(text)'''
 
 def standart_menu(): #Standart menu template
     app.remove()
     fr_main = Frame()
-    fr_main.pack(fill = BOTH, expand = 1)
+    fr_main.pack()
+    #print(fr_main.config())
     app.add(fr_main)
     fr_side = Frame(fr_main)
     fr_side.grid(row = 1, column = 2, rowspan = 2)
@@ -1095,26 +1378,39 @@ def standart_menu(): #Standart menu template
 def menu_teams(): #Menu for creating teams
     standart_menu()
     n = settings.n
-    lb1 = tkinter.Entry(app.cw, font = MyFont)
-    lb2 = tkinter.Entry(app.cw, font = MyFont)
-    lb1.insert(0, "Teams")
-    lb2.insert(0, "Score")
+    lb1 = tkinter.Label(app.cw, font = MyFont, text = "Teams")
+    lb2 = tkinter.Label(app.cw, font = MyFont, text = "Score")
+    fr = Frame(app.cw, height = 130)
+    fr.grid(row = 0)
     lb1.grid(row = 1, column = 1)
     lb2.grid(row = 1, column = 3)
-    for i in range(n):
-        lb1 = tkinter.Entry(app.cw, bg = teams.colors[i], font = MyFont)
-        lb1.insert(0, "Name of team №" + str(i))
-        lb1.grid(row = i + 2, column = 1)
-        app.add_sp(lb1)
-        lb1 = tkinter.Entry(app.cw, bg = teams.colors[i], font = MyFont)
-        lb1.insert(0, "0")
-        lb1.grid(row = i + 2, column = 3)
-        app.add_sp(lb1) 
+
+    #print(setts.teams.nm) 
+    if len(setts.teams.nm) == n:
+        for i in range(n):
+            lb1 = tkinter.Entry(app.cw, bg = teams.colors[i], font = MyFont)
+            lb1.insert(0, setts.teams.nm[i])
+            lb1.grid(row = i + 2, column = 1)
+            app.add_sp(lb1)
+            lb1 = tkinter.Entry(app.cw, bg = teams.colors[i], font = MyFont)
+            lb1.insert(0, setts.teams.score[setts.teams.nm[i]])
+            lb1.grid(row = i + 2, column = 3)
+            app.add_sp(lb1) 
+    else:
+        for i in range(n):
+            lb1 = tkinter.Entry(app.cw, bg = teams.colors[i], font = MyFont)
+            lb1.insert(0, "Name of team №" + str(i))
+            lb1.grid(row = i + 2, column = 1)
+            app.add_sp(lb1)
+            lb1 = tkinter.Entry(app.cw, bg = teams.colors[i], font = MyFont)
+            lb1.insert(0, "0")
+            lb1.grid(row = i + 2, column = 3)
+            app.add_sp(lb1) 
     fr_nav = Frame(app.sw)
     fr_nav.pack()
-    bt = Button(fr_nav, text = parametres.SPACES + "Back" + parametres.SPACES, command = menu_new_party)
+    bt = Button(app.cw, text = parametres.SPACES + "Back" + parametres.SPACES, command = menu_new_party)
     bt.grid(row = n + 3, column = 1)
-    bt2 = Button(fr_nav, text = parametres.SPACES + "Next" + parametres.SPACES, command = PrepareForGame)
+    bt2 = Button(app.cw, text = parametres.SPACES + "Next" + parametres.SPACES, command = PrepareForGame)
     bt2.grid(row = n + 3, column = 3)
     text = Message(app.bw, font = MyFont)
     #    tkinter.Text width = width, height = height)
@@ -1123,38 +1419,69 @@ def menu_teams(): #Menu for creating teams
 
 def menu_start(): #Start menu
     app.remove()
+    print(root.size())
+    print(root.winfo_screenwidth())
+    print()
     font.nametofont('TkDefaultFont').configure(size = 30)
-    fr_main = Frame(bg = "pink")
+    print(root.geometry())
+    fr_main = Frame()
     fr_main.pack()
     app.add(fr_main)
     fr = fr_main
     w1 = 15 #width of buttons
     h1 = 1  #height of buttons 
-    bt = Button(fr, text = "New game", command = menu_new_party, width = w1, height = h1)
+    var = tkinter.IntVar()
+    fr_empty = Frame(fr, width = 20, height = 100)
+    fr_empty.pack()
+    bt = Radiobutton(fr, text = "New game", command = menu_new_party, width = w1, height = h1, variable = var, value = 1)
     bt.pack()
-    bt2 = Button(fr, text = "Continue", command = load_game, width = w1, height = h1)
+    bt2 = Radiobutton(fr, text = "Continue", command = load_game, width = w1, height = h1, variable = var, value = 2)
     bt2.pack()
-    bt3 = Button(fr, text = "About", command = menu_credits, width = w1, height = h1)
+    bt3 = Radiobutton(fr, text = "About", command = menu_credits, width = w1, height = h1, variable = var, value = 3)
     bt3.pack()
-    bt4 = Button(fr, text = lang.lang_list[lang.curr], command = another_language, width = w1, height = h1)
-    bt4.pack()
-    app.lang_bt = bt4
-    bt1 = Button(fr, text = "Quit", command = Quit, width = w1, height = h1)
+    #bt4 = Radiobutton(fr, text = lang.lang_list[lang.curr], command = another_language, width = w1, height = h1, variable = var, value = 4)
+    #bt4.pack()
+    #app.lang_bt = bt4b
+    bt1 = Radiobutton(fr, text = "Quit", command = Quit, width = w1, height = h1, variable = var, value = 5)
     bt1.pack()
+    fr_lang = Frame(fr)
+    fr_lang.pack()
+    bt = tkinter.Button(fr_lang, image = eng, command = lambda: (lang.change("English"), menu_start()))
+    bt.grid(row = 1, column = 1)
+    bt = Frame(fr_lang, width = 230, height = 30 )
+    bt.grid(row = 1, column = 2)
+    bt = tkinter.Button(fr_lang, image = rus, command = lambda: (lang.change("Русский"), menu_start()))
+    bt.grid(row = 1, column = 3)
+
+
+def change_loader(symbol):
+    if symbol == "<":
+        return "^"
+    if symbol == "^":
+        return ">"
+    if symbol == ">":
+        return "v"
+    if symbol == "v":
+        return "<"
 
 teams = team_data() #Storage for information about teams
 source = "fields.sv"
 #settings = prec(1366 - 15, 768 - 40, "3.5", source, 5) #GetSystemMetrics(0) - 15, GetSystemMetrics(1) - 40,
-settings = prec(GetSystemMetrics(0) - 15, GetSystemMetrics(1) - 40, "3.6 alpha", source, 5) #
+settings = prec(GetSystemMetrics(0) - 15, GetSystemMetrics(1) - 40, "3.6.1 beta", source, 5) #
 archive = hist()
 #^Storage for const information^
 width = 52
 height = 5
+#print(tkinter.RELIEF)
 BOTH = tkinter.BOTH
 ALL = tkinter.ALL
 YES = tkinter.YES
 NW = tkinter.NW
 END = tkinter.END
+COLOR_CLICK = "dark khaki"
+COLOR_HOVER = "bisque3"
+COLOR_DISABLED = "LightSkyBlue3"
+settings.n = 2
 root = tkinter.Tk() #Main window
 app = screen()
 pc = tkinter.PhotoImage(file = "pacman.gif") 
@@ -1162,11 +1489,24 @@ ap = tkinter.PhotoImage(file = "apple.png")
 ch = tkinter.PhotoImage(file = "cherry.png")
 logo = tkinter.PhotoImage(file = "KrechetBest.png") #My logo
 theme = tkinter.PhotoImage(file = "Small Krechet.png")
+eng = tkinter.PhotoImage(file = "EN flag.png")
+rus = tkinter.PhotoImage(file = "RU flag.png")
 root.title("Pacman v" + str(settings.version))
-root.geometry(str(settings.width) + 'x' + str(settings.height))
+#root.geometry(str(settings.width) + 'x' + str(settings.height))
+
+root.minsize(width = 500, height = 500)
 parametres = param(0, 0, "         ")
 lang = language()
 font.nametofont('TkDefaultFont').configure(size = 30)
 MyFont = font.Font(weight='bold', size = 20)
+MyFont2 = font.Font(size = 20)
 menu_start()
+setts = default_settings()
+sys.setrecursionlimit(100000)
+root.state("zoomed")
+def task():
+    #print("hello")
+    root.state("zoomed")
+    root.after(2000, task)  # reschedule event in 2 seconds
+#root.after(2000, task)
 root.mainloop()
