@@ -1,2 +1,2 @@
-[['Name of team №0', 0], ['Name of team №1', 0], ['Name of team №2', -1], ['Name of team3edff', 0]]
-{'n': 4, 'apple_cost': 5, 'shield': <tkinter.IntVar object at 0x000000583184E780>, 'width': 9, 'height': 9, 'cherry': 0, 'apple': 0, 'min dist': 5, 'empty': <tkinter.IntVar object at 0x000000583184EDA0>}
+[['Альдебаран', 10], ['Флибуста', 100], ['Royallib', 0], ['Litmir', -10000]]
+{'n': 4, 'apple_cost': 5, 'shield': <tkinter.IntVar object at 0x0000005E9715CEB8>, 'width': 9, 'height': 9, 'cherry': 0, 'apple': 0, 'min dist': 5, 'empty': <tkinter.IntVar object at 0x0000005E9715CE48>}

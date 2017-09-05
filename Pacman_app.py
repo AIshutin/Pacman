@@ -412,7 +412,9 @@ class language: #module for translating
             "The distance between players is too big for this gamefield.": "Расстояние между игроками слишком большое для этого поля.",
             "Too many objects for this gamefield.": "Слишком объектов для этого поля.",
             "Incorrect form number": "Неправильная форма №",
-            "About": "Об авторе"
+            "About": "Об авторе",
+            "Andrew Ishutin is a developer of this program.\nYou can send a message to:\nEmail: hazmozavr@gmail.com\nVk: https://vk.com/aishutin2002": 
+            "Андрей Ишутин - автор данной программы.\nВы можете связатья со мной по этим контактам:\nПочта: hazmozavr@gmail.com\nVk: https://vk.com/aishutin2002"
         }
         self.curr = 0 # 1 - English, 0 - Russian . Defines current language mod
     
@@ -1030,19 +1032,28 @@ def menu_settings(): #Menu for defining global gamefield parametres
 
 def menu_credits(): #My menu. Please don`t modify
     app.remove()
-    f1 = Frame(root, bg = "blue", width = 600, height = 600)
-    f2 = Frame(root, bg = "black")
-    f3 = Frame(root, bg = "darkblue")
-    f1.grid(row = 1, column = 1, columnspan = 2)
-    f2.grid(row = 1, column = 3)
-    f3.grid(row = 2, column = 1, columnspan = 3)
-    c1 = tkinter.Canvas(f1, width = 600, height = 600)
+
+    f1 = Frame(root, width = 450, height = 500)
+    f2 = Frame(root)
+    f3 = Frame(root)
+
+    f1.grid(row = 1, column = 1, columnspan = 1)
+    f2.grid(row = 1, column = 2)
+    f3.grid(row = 2, column = 1, columnspan = 2)
+
+    c1 = tkinter.Canvas(f1, width = 450, height = 500)
     c1.create_image(250, 300, image = logo)
-    c1.pack()
-    message = Message(f2, font = MyFont, width = 700, text = "AIs Software\nAndrew Ishutin is a developer of this program.\nYou can send a message to:\nEmail: hazmozavr@gmail.com\nVk: https://vk.com/aishutin2002")
+    c1.pack(padx = 10, pady = 10)
+
+    title = Frame(f2)
+    title.pack()
+    Label(title, text = "AIs Software").pack()
+
+    message = Message(f2, font = MyFont, width = 700, text = "Andrew Ishutin is a developer of this program.\nYou can send a message to:\nEmail: hazmozavr@gmail.com\nVk: https://vk.com/aishutin2002")
     message.pack()
-    bt3 = Button(f3, text = "Back", command = menu_start)
+    bt3 = Button(f3, text = "Back", command = menu_start, width = 20)
     bt3.pack()
+    Frame(f3, height = 20).pack()
     app.add(f1)
     app.add(f2)
     app.add(f3)
@@ -1467,7 +1478,7 @@ def change_loader(symbol):
 teams = team_data() #Storage for information about teams
 source = "fields.sv"
 #settings = prec(1366 - 15, 768 - 40, "3.5", source, 5) #GetSystemMetrics(0) - 15, GetSystemMetrics(1) - 40,
-settings = prec(GetSystemMetrics(0) - 15, GetSystemMetrics(1) - 40, "3.6.1 beta", source, 5) #
+settings = prec(GetSystemMetrics(0) - 15, GetSystemMetrics(1) - 40, "3.6.2", source, 5) #
 archive = hist()
 #^Storage for const information^
 width = 52
@@ -1487,7 +1498,7 @@ app = screen()
 pc = tkinter.PhotoImage(file = "pacman.gif") 
 ap = tkinter.PhotoImage(file = "apple.png") 
 ch = tkinter.PhotoImage(file = "cherry.png")
-logo = tkinter.PhotoImage(file = "KrechetBest.png") #My logo
+logo = tkinter.PhotoImage(file = "AI.png") #My logo
 theme = tkinter.PhotoImage(file = "Small Krechet.png")
 eng = tkinter.PhotoImage(file = "EN flag.png")
 rus = tkinter.PhotoImage(file = "RU flag.png")
@@ -1504,9 +1515,4 @@ menu_start()
 setts = default_settings()
 sys.setrecursionlimit(100000)
 root.state("zoomed")
-def task():
-    #print("hello")
-    root.state("zoomed")
-    root.after(2000, task)  # reschedule event in 2 seconds
-#root.after(2000, task)
 root.mainloop()
