@@ -414,7 +414,10 @@ class language: #module for translating
             "Incorrect form number": "Неправильная форма №",
             "About": "Об авторе",
             "Andrew Ishutin is a developer of this program.\nYou can send a message to:\nEmail: hazmozavr@gmail.com\nVk: https://vk.com/aishutin2002": 
-            "Андрей Ишутин - автор данной программы.\nВы можете связатья со мной по этим контактам:\nПочта: hazmozavr@gmail.com\nVk: https://vk.com/aishutin2002"
+            "Андрей Ишутин - автор данной программы.\nВы можете связатья со мной по этим контактам:\nПочта: hazmozavr@gmail.com\nVk: https://vk.com/aishutin2002",
+            "Preferences": "Настройки",
+            "Map changing": "Изменение карты",
+            "Sсore": "Счет" # с in score is russian
         }
         self.curr = 0 # 1 - English, 0 - Russian . Defines current language mod
     
@@ -438,7 +441,7 @@ class language: #module for translating
             str1 = str1[i:j + 1]
             z = ""
             if str1 not in self.ru:
-                #print(str1) #ToDo
+                print(str1) #ToDo
                 return " " * i + str1 + z + " " * cnt 
             return " " * i + self.ru[str1] + z + " " * cnt
         else: # English
@@ -1389,8 +1392,8 @@ def standart_menu(): #Standart menu template
 def menu_teams(): #Menu for creating teams
     standart_menu()
     n = settings.n
-    lb1 = tkinter.Label(app.cw, font = MyFont, text = "Teams")
-    lb2 = tkinter.Label(app.cw, font = MyFont, text = "Score")
+    lb1 = Label(app.cw, font = MyFont, text = "Teams")
+    lb2 = Label(app.cw, font = MyFont, text = "Sсore")
     fr = Frame(app.cw, height = 130)
     fr.grid(row = 0)
     lb1.grid(row = 1, column = 1)
@@ -1478,7 +1481,7 @@ def change_loader(symbol):
 teams = team_data() #Storage for information about teams
 source = "fields.sv"
 #settings = prec(1366 - 15, 768 - 40, "3.5", source, 5) #GetSystemMetrics(0) - 15, GetSystemMetrics(1) - 40,
-settings = prec(GetSystemMetrics(0) - 15, GetSystemMetrics(1) - 40, "3.6.2", source, 5) #
+settings = prec(GetSystemMetrics(0) - 15, GetSystemMetrics(1) - 40, "3.7 AIs Software", source, 5) #
 archive = hist()
 #^Storage for const information^
 width = 52
@@ -1503,8 +1506,6 @@ theme = tkinter.PhotoImage(file = "Small Krechet.png")
 eng = tkinter.PhotoImage(file = "EN flag.png")
 rus = tkinter.PhotoImage(file = "RU flag.png")
 root.title("Pacman v" + str(settings.version))
-#root.geometry(str(settings.width) + 'x' + str(settings.height))
-
 root.minsize(width = 500, height = 500)
 parametres = param(0, 0, "         ")
 lang = language()
