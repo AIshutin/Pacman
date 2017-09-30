@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from copy import*
 from tkinter import filedialog
 import tkinter.font as font
@@ -16,7 +17,7 @@ Don`t try to read it from begin to end.
 Read it like dfs || bfs, start of logic is in the end of the code.
 Also it`s my first documentation, so lucky you are!
 But you almost have one hope: my email: hazmozavr@gmail.com or
-ask Elena Borisvna to tell you my contact.
+ask Elena Borisovna to tell you my contact.
 
 I also have some information to tell you which
 explains why my code is these code.
@@ -801,6 +802,7 @@ def prev_change(): #Function that allows to return to earlier state
     teams = deepcopy(z[0])
     app.field = deepcopy(z[1])
     parametres = deepcopy(z[2])
+    app.canv.delete(tkinter.ALL)
     app.canv.draw_gamefield(app.field)
     app.score.update()
     app.canv.HotKeys("<Button-1>", replace2)
@@ -1035,30 +1037,38 @@ def menu_settings(): #Menu for defining global gamefield parametres
 
 def menu_credits(): #My menu. Please don`t modify
     app.remove()
-
-    f1 = Frame(root, width = 450, height = 500)
-    f2 = Frame(root)
+    f_top = Frame(root, width = 50)
+    f_top.grid(row = 1, columnspan = 2)
+    f = Frame(root)
+    app.add(f)
+    f.grid(row = 2, columnspan = 2)
+    s = 'Когда раунд закончен, старое игровое поле стирается, и рисуется новое. Набранные за этот раунд очки перечисляются в итоговый счёт команд. Если в закончившемся раунде кого-то съели, он получает утешительный бонус — в новом раунде остальным игрокам запрещается его съедать.\nВ конце игры победителем становится команда, набравшая наибольшее количество очков.'
+    f_slider = Frame(f, width = 50)
+    f_slider.grid(row = 1, column=1)
+    z1 = Message(f, width = 800, font = MyFont3, text=u'''Каждая из команд управляет круглым голодным всеядным существом, которое перемещается по клеткам игрового поля за счёт сданных командой правильных ответов к задачам. У каждой задачи указана стоимость в баллах — это количество шагов, на которые она позволяет сдвинуться. Эти баллы не накапливаются, их нужно тратить сразу, как только задача успешно сдана.\n\nПри перемещении ваш питомец съедает всё, что встречается ему на пути. На клетки, занятые другими игроками, вставать нельзя (но, при определённых условиях, о которых будет рассказано чуть позже, даже и других игроков можно будет съесть!)\nНа клетках игрового поля можно встретить разные съедобные бонусы:\n\nТочечки — основной вид еды, каждая съеденная точка добавляет 1 очко к счёту в текущем раунде.\nВишенка — съев её, ваш питомец становится кровожадным и может есть других игроков. Когда вы съедаете другого игрока, раунд (а заодно и ваш ход) немедленно заканчивается, и вы получаете все очки, набранные съеденным игроком за этот раунд.\nЯблоко — съев его, вы получаете 5 очков к вашему итоговому счёту. Эти очки — “несгораемые”, они не переходят к другому игроку, если вас вдруг съедят.\nИгра проходит в несколько раундов. Раунд заканчивается в одном из трёх случаев:\n1.\tНа поле закончилась еда\n2.\tКто-то из игроков съеден\n3.\tВремя занятия закончилось\n''' + s)
+    z1.grid(row = 1, column = 2)
+    ad = Frame(root)
+    app.add(ad)
+    ad.grid(row = 3, columnspan = 2)
+    f1 = Frame(ad)
+    f2 = Frame(ad)
     f3 = Frame(root)
-
     f1.grid(row = 1, column = 1, columnspan = 1)
     f2.grid(row = 1, column = 2)
-    f3.grid(row = 2, column = 1, columnspan = 2)
-
-    c1 = tkinter.Canvas(f1, width = 450, height = 500)
-    c1.create_image(250, 300, image = logo)
+    f3.grid(row = 4, column = 1, columnspan = 2)
+    c1 = tkinter.Canvas(f1, width = 80, height = 87)
+    c1.create_image(80, 87, image = logo)
     c1.pack(padx = 10, pady = 10)
 
     title = Frame(f2)
     title.pack()
     Label(title, text = "AIs Software").pack()
 
-    message = Message(f2, font = MyFont, width = 700, text = "Andrew Ishutin is a developer of this program.\nYou can send a message to:\nEmail: hazmozavr@gmail.com\nVk: https://vk.com/aishutin2002")
+    message = Message(f2, width=wdt, font = MyFont2,  text = "hazmozavr@gmail.com\nhttps://vk.com/aishutin2002")
     message.pack()
-    bt3 = Button(f3, text = "Back", command = menu_start, width = 20)
+    bt3 = Button(f3, text = "Back", command = menu_start, width = 10, height=1)
     bt3.pack()
     Frame(f3, height = 20).pack()
-    app.add(f1)
-    app.add(f2)
     app.add(f3)
 
 def menu_map(): #Menu for previewing and changing the map
@@ -1362,14 +1372,9 @@ def menu_new_party(): #Menu for creating new session
     app.add_sp(sc)
     sc.update_value(type_ = "field", param = "min dist")
 
-    #var = tkinter.IntVar()
     cb = tkinter.Checkbutton(fr_set, text = lang.translate("Empty map"), variable = setts.field["empty"],  onvalue="1", offvalue="0")
     cb.grid(row = 12, column = 1, columnspan = 3)
     app.cb_var = setts.field["empty"]
-
-    '''text = Message(app.bw, font = MyFont)#tkinter.Text(app.bw, font = MyFont, width = width, height = height)
-    text.grid()
-    app.add_es(text)'''
 
 def standart_menu(): #Standart menu template
     app.remove()
@@ -1427,7 +1432,6 @@ def menu_teams(): #Menu for creating teams
     bt2 = Button(app.cw, text = parametres.SPACES + "Next" + parametres.SPACES, command = PrepareForGame)
     bt2.grid(row = n + 3, column = 3)
     text = Message(app.bw, font = MyFont)
-    #    tkinter.Text width = width, height = height)
     text.grid(row = n + 4, column = 3)
     app.add_es(text)
 
@@ -1453,9 +1457,6 @@ def menu_start(): #Start menu
     bt2.pack()
     bt3 = Radiobutton(fr, text = "About", command = menu_credits, width = w1, height = h1, variable = var, value = 3)
     bt3.pack()
-    #bt4 = Radiobutton(fr, text = lang.lang_list[lang.curr], command = another_language, width = w1, height = h1, variable = var, value = 4)
-    #bt4.pack()
-    #app.lang_bt = bt4b
     bt1 = Radiobutton(fr, text = "Quit", command = Quit, width = w1, height = h1, variable = var, value = 5)
     bt1.pack()
     fr_lang = Frame(fr)
@@ -1512,6 +1513,7 @@ lang = language()
 font.nametofont('TkDefaultFont').configure(size = 30)
 MyFont = font.Font(weight='bold', size = 20)
 MyFont2 = font.Font(size = 20)
+MyFont3 = font.Font(weight='bold', size = 10)
 menu_start()
 setts = default_settings()
 sys.setrecursionlimit(100000)
