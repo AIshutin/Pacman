@@ -379,6 +379,10 @@ class language: #module for translating
     lang_list = ["Русский", "English"] # real list
 
     def __init__(self):
+        s1 = "Each of the teams controls a round hungry omnivore creature, which moves through the cells of the playing field due to the correct answers given by the team to the tasks. Each task has a cost in points - this is the number of steps it allows to move. These points do not accumulate, they need to be spent immediately as soon as the task is successfully completed.\n\nWhen moving, your pet eats everything that meets him on the way. You can not get up on the cells occupied by other players (but under certain conditions, which will be told later, even other players can be eaten!)\nThere are different edible bonuses on the cells of the playing field:\n\nPoints - the main type of food, each eaten point adds 1 point to the score in the current round.\nCherry - eating it, your pet becomes bloodthirsty and can eat other players. When you eat another player, the round (and at the same time your turn) immediately ends and you get all the points collected by the eaten player for this round. \nYou eat it, you get 5 points to your final score. These points are fireproof, they do not transfer to another player if they suddenly eat you up.\nThe game takes place in several rounds. The round ends in one of three cases: \n1.\tThe food ran out \n2.\tOf some of the players are eaten\n3.\tThe session time is over.\nWhen the round is over, the old playing field is erased and a new one is drawn. The points collected for this round are transferred to the final score of the teams. If someone ate in the last round, he gets a consolation bonus - in the new round, the rest of the players are forbidden to eat it.\nIn the end of the game, the team with the highest score becomes the winner."
+        s = u'Когда раунд закончен, старое игровое поле стирается, и рисуется новое. Набранные за этот раунд очки перечисляются в итоговый счёт команд. Если в закончившемся раунде кого-то съели, он получает утешительный бонус — в новом раунде остальным игрокам запрещается его съедать.\nВ конце игры победителем становится команда, набравшая наибольшее количество очков.'
+        s2 = u'Каждая из команд управляет круглым голодным всеядным существом, которое перемещается по клеткам игрового поля за счёт сданных командой правильных ответов к задачам. У каждой задачи указана стоимость в баллах — это количество шагов, на которые она позволяет сдвинуться. Эти баллы не накапливаются, их нужно тратить сразу, как только задача успешно сдана.\n\nПри перемещении ваш питомец съедает всё, что встречается ему на пути. На клетки, занятые другими игроками, вставать нельзя (но, при определённых условиях, о которых будет рассказано чуть позже, даже и других игроков можно будет съесть!)\nНа клетках игрового поля можно встретить разные съедобные бонусы:\n\nТочечки — основной вид еды, каждая съеденная точка добавляет 1 очко к счёту в текущем раунде.\nВишенка — съев её, ваш питомец становится кровожадным и может есть других игроков. Когда вы съедаете другого игрока, раунд (а заодно и ваш ход) немедленно заканчивается, и вы получаете все очки, набранные съеденным игроком за этот раунд.\nЯблоко — съев его, вы получаете 5 очков к вашему итоговому счёту. Эти очки — “несгораемые”, они не переходят к другому игроку, если вас вдруг съедят.\nИгра проходит в несколько раундов. Раунд заканчивается в одном из трёх случаев:\n1.\tНа поле закончилась еда\n2.\tКто-то из игроков съеден\n3.\tВремя занятия закончилось\n' + s
+
         self.ru = { # English to Russian dictionary
             "Load": "Загрузить",
             "Save": "Сохранить",
@@ -413,13 +417,16 @@ class language: #module for translating
             "The distance between players is too big for this gamefield.": "Расстояние между игроками слишком большое для этого поля.",
             "Too many objects for this gamefield.": "Слишком объектов для этого поля.",
             "Incorrect form number": "Неправильная форма №",
-            "About": "Об авторе",
+            "About": "Об игре",
             "Andrew Ishutin is a developer of this program.\nYou can send a message to:\nEmail: hazmozavr@gmail.com\nVk: https://vk.com/aishutin2002": 
             "Андрей Ишутин - автор данной программы.\nВы можете связатья со мной по этим контактам:\nПочта: hazmozavr@gmail.com\nVk: https://vk.com/aishutin2002",
             "Preferences": "Настройки",
             "Map changing": "Изменение карты",
+            "PREFERENCES": "НАСТРОЙКИ",
+            "ABOUT": "ОБ ИГРЕ",
             "Sсore": "Счет" # с in score is russian
         }
+        self.ru[s1] = s2
         self.curr = 0 # 1 - English, 0 - Russian . Defines current language mod
     
     def change(self, str1): # Changes language
@@ -1035,40 +1042,48 @@ def menu_settings(): #Menu for defining global gamefield parametres
     else:
         goto_menu_map_new()
 
-def menu_credits(): #My menu. Please don`t modify
+def menu_credits():
     app.remove()
-    f_top = Frame(root, width = 50)
-    f_top.grid(row = 1, columnspan = 2)
+    app.add(root)
+    color = "grey"
     f = Frame(root)
     app.add(f)
+    f_top = Frame(f)
     f.grid(row = 2, columnspan = 2)
-    s = 'Когда раунд закончен, старое игровое поле стирается, и рисуется новое. Набранные за этот раунд очки перечисляются в итоговый счёт команд. Если в закончившемся раунде кого-то съели, он получает утешительный бонус — в новом раунде остальным игрокам запрещается его съедать.\nВ конце игры победителем становится команда, набравшая наибольшее количество очков.'
+    f_top.grid(row = 0, column=1, columnspan = 2)
+    f_side = Frame(f_top, width = 20, height = 2).grid(row = 1, column = 1)
+    f_sign = Frame(f_top, bg=color)
+    f_sign.grid(row=1, column=2)
+    sign = Label(f_sign, height=2, width=10, bg=color, text="ABOUT")
+    sign.pack()
+    s1 = "Each of the teams controls a round hungry omnivore creature, which moves through the cells of the playing field due to the correct answers given by the team to the tasks. Each task has a cost in points - this is the number of steps it allows to move. These points do not accumulate, they need to be spent immediately as soon as the task is successfully completed.\n\nWhen moving, your pet eats everything that meets him on the way. You can not get up on the cells occupied by other players (but under certain conditions, which will be told later, even other players can be eaten!)\nThere are different edible bonuses on the cells of the playing field:\n\nPoints - the main type of food, each eaten point adds 1 point to the score in the current round.\nCherry - eating it, your pet becomes bloodthirsty and can eat other players. When you eat another player, the round (and at the same time your turn) immediately ends and you get all the points collected by the eaten player for this round. \nYou eat it, you get 5 points to your final score. These points are fireproof, they do not transfer to another player if they suddenly eat you up.\nThe game takes place in several rounds. The round ends in one of three cases: \n1.\tThe food ran out \n2.\tOf some of the players are eaten\n3.\tThe session time is over.\nWhen the round is over, the old playing field is erased and a new one is drawn. The points collected for this round are transferred to the final score of the teams. If someone ate in the last round, he gets a consolation bonus - in the new round, the rest of the players are forbidden to eat it.\nIn the end of the game, the team with the highest score becomes the winner."
     f_slider = Frame(f, width = 50)
     f_slider.grid(row = 1, column=1)
-    z1 = Message(f, width = 800, font = MyFont3, text=u'''Каждая из команд управляет круглым голодным всеядным существом, которое перемещается по клеткам игрового поля за счёт сданных командой правильных ответов к задачам. У каждой задачи указана стоимость в баллах — это количество шагов, на которые она позволяет сдвинуться. Эти баллы не накапливаются, их нужно тратить сразу, как только задача успешно сдана.\n\nПри перемещении ваш питомец съедает всё, что встречается ему на пути. На клетки, занятые другими игроками, вставать нельзя (но, при определённых условиях, о которых будет рассказано чуть позже, даже и других игроков можно будет съесть!)\nНа клетках игрового поля можно встретить разные съедобные бонусы:\n\nТочечки — основной вид еды, каждая съеденная точка добавляет 1 очко к счёту в текущем раунде.\nВишенка — съев её, ваш питомец становится кровожадным и может есть других игроков. Когда вы съедаете другого игрока, раунд (а заодно и ваш ход) немедленно заканчивается, и вы получаете все очки, набранные съеденным игроком за этот раунд.\nЯблоко — съев его, вы получаете 5 очков к вашему итоговому счёту. Эти очки — “несгораемые”, они не переходят к другому игроку, если вас вдруг съедят.\nИгра проходит в несколько раундов. Раунд заканчивается в одном из трёх случаев:\n1.\tНа поле закончилась еда\n2.\tКто-то из игроков съеден\n3.\tВремя занятия закончилось\n''' + s)
+    z1 = Message(f, width = 800, font = MyFont3, text=s1)
     z1.grid(row = 1, column = 2)
+    
     ad = Frame(root)
     app.add(ad)
     ad.grid(row = 3, columnspan = 2)
     f1 = Frame(ad)
     f2 = Frame(ad)
+
     f3 = Frame(root)
     f1.grid(row = 1, column = 1, columnspan = 1)
     f2.grid(row = 1, column = 2)
-    f3.grid(row = 4, column = 1, columnspan = 2)
-    c1 = tkinter.Canvas(f1, width = 80, height = 87)
-    c1.create_image(80, 87, image = logo)
-    c1.pack(padx = 10, pady = 10)
 
+    f3.grid(row = 2, column = 1, columnspan = 2)
+    c1 = tkinter.Canvas(f1, width = 80, height = 87)
+    c1.create_image(0, 0, image = logo, anchor=tkinter.NW)
+    c1.pack(padx = 10, pady = 10)
     title = Frame(f2)
     title.pack()
     Label(title, text = "AIs Software").pack()
-
-    message = Message(f2, width=wdt, font = MyFont2,  text = "hazmozavr@gmail.com\nhttps://vk.com/aishutin2002")
+    message = Message(f2, width=800, font = MyFont2,  text = "hazmozavr@gmail.com\nhttps://vk.com/aishutin2002")
     message.pack()
-    bt3 = Button(f3, text = "Back", command = menu_start, width = 10, height=1)
-    bt3.pack()
-    Frame(f3, height = 20).pack()
+    bt3 = Button(f3, font=MyFont, text = "Back", command = menu_start, width = 20, height=2)
+    bt3.grid(column = 0, row = 1)
+    Frame(f3, height = 20).grid(column = 2, row = 1)
     app.add(f3)
 
 def menu_map(): #Menu for previewing and changing the map
@@ -1249,10 +1264,25 @@ def menu_new_party(): #Menu for creating new session
     main = Frame()
     main.pack()#fill = BOTH, expand = 1
     font.nametofont('TkDefaultFont').configure(size = 20)
+
+    color = "grey"
+    #f_side = Frame(f_top, width = 20, height = 2)
+    #f_side.pack(side=tkinter.LEFT)
+    '''f_sign = Frame(f_top, bg=color)
+    f_sign.pack()
+    sign = Label(f_sign, height=2, width=20, bg=color, text="PREFERENCES")
+    sign.pack()'''
+    #f_r = Frame(f_top, width = 100)
+    #f_r.pack(side=tkinter.LEFT)
+
     teams.reset()
     fr_set = Frame(main) #A frame for settings 
     #fr_nav = Frame(app.sw) #A frame for navigation buttons
-    fr_set.pack()#fill = BOTH, expand = 1
+    fr_set.pack()#fill = BOTH, expand = ]
+    f_sign = Frame(fr_set, bg=color)
+    f_sign.grid(row = 0)
+    sign = Label(f_sign, height=2, width=20, bg=color, text="PREFERENCES")
+    sign.pack()
     errors = Frame(main)
     errors.pack()#fill = BOTH, expand = 1
     #fr_nav.pack()
@@ -1262,8 +1292,8 @@ def menu_new_party(): #Menu for creating new session
 
     Fr1 = Frame(fr_set)
     Fr1.grid(row = 2, column = 1, columnspan = 3)
-    lb = Label(Fr1, text = "Preferences", font = MyFont)
-    lb.pack()
+    #lb = Label(Fr1, text = "Preferences", font = MyFont)
+    #lb.pack()
     pref = Frame(fr_set)
     pref.grid(row = 3, column = 1, columnspan = 3)
     lb = Label(pref, text = "Number of teams: ")
@@ -1511,7 +1541,7 @@ root.minsize(width = 500, height = 500)
 parametres = param(0, 0, "         ")
 lang = language()
 font.nametofont('TkDefaultFont').configure(size = 30)
-MyFont = font.Font(weight='bold', size = 20)
+MyFont = font.Font(weight='bold', size = 15)
 MyFont2 = font.Font(size = 20)
 MyFont3 = font.Font(weight='bold', size = 10)
 menu_start()
